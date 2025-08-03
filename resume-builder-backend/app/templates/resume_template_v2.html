@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>John Doe's CV</title>
+    <style>
+      body {
+        font-family: "Georgia", serif;
+        font-size: 11px;
+        color: #000;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.4;
+      }
+      h1 {
+        font-size: 24px;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      .contact {
+        text-align: center;
+        font-size: 10px;
+        margin-bottom: 16px;
+      }
+      section {
+        margin-top: 20px;
+      }
+      .section-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        border-bottom: 1px solid #000;
+        margin-bottom: 10px;
+        padding-bottom: 2px;
+        font-size: 12px;
+      }
+      .twocol {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .twocol .left {
+        flex: 1;
+        font-weight: bold;
+      }
+      .twocol .right {
+        flex: 1;
+        text-align: right;
+        font-style: italic;
+      }
+      ul {
+        padding-left: 16px;
+        margin: 4px 0 10px;
+      }
+      li {
+        margin-bottom: 3px;
+      }
+      .small {
+        font-size: 10px;
+        margin-bottom: 6px;
+      }
+      .skills span {
+        display: inline-block;
+        margin-right: 10px;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>John Doe</h1>
+    <div class="contact">
+      Your Location • youremail@yourdomain.com • 0541 999 99 99 •
+      yourwebsite.com • linkedin.com/in/yourusername • github.com/yourusername
+    </div>
+
+    <section>
+      <div class="section-title">Welcome to RenderCV!</div>
+      <p>
+        <a href="https://rendercv.com">RenderCV</a> is a LaTeX-based CV/resume
+        version-control and maintenance app. It allows you to create a
+        high-quality CV or resume as a PDF file from a YAML file, with
+        <strong>Markdown syntax support</strong> and
+        <strong>complete control over the LaTeX code</strong>.
+      </p>
+      <p>
+        The boilerplate content was inspired by
+        <a href="https://github.com/dnl-blkv/mcdowell-cv">Gayle McDowell</a>.
+      </p>
+    </section>
+
+    <section>
+      <div class="section-title">Quick Guide</div>
+      <ul>
+        <li>
+          Each section title is arbitrary and each section contains a list of
+          entries.
+        </li>
+        <li>
+          There are 7 unique entry types: <em>BulletEntry</em>,
+          <em>TextEntry</em>, <em>EducationEntry</em>, <em>ExperienceEntry</em>,
+          <em>NormalEntry</em>, <em>PublicationEntry</em>, and
+          <em>OneLineEntry</em>.
+        </li>
+        <li>
+          Select a section title, pick an entry type, and start writing your
+          section!
+        </li>
+        <li>
+          <a href="https://docs.rendercv.com/user_guide/">Here</a>, you can find
+          a comprehensive user guide for RenderCV.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-title">Education</div>
+      <div class="twocol">
+        <div class="left">University of Pennsylvania</div>
+        <div class="right">Sept 2000 – May 2005</div>
+      </div>
+      <div class="small">BS in Computer Science</div>
+      <ul>
+        <li>
+          GPA: 3.9/4.0 (<a href="https://example.com">a link to somewhere</a>)
+        </li>
+        <li>
+          <strong>Coursework:</strong> Computer Architecture, Comparison of
+          Learning Algorithms, Computational Theory
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-title">Experience</div>
+      <div class="twocol">
+        <div class="left">Software Engineer - Apple</div>
+        <div class="right">Cupertino, CA | June 2005 – Aug 2007</div>
+      </div>
+      <ul>
+        <li>
+          Reduced time to render user buddy lists by 75% by implementing a
+          prediction algorithm
+        </li>
+        <li>Integrated iChat with Spotlight Search</li>
+        <li>
+          Redesigned chat file format and implemented backward compatibility for
+          search
+        </li>
+      </ul>
+
+      <div class="twocol">
+        <div class="left">Software Engineer Intern - Microsoft</div>
+        <div class="right">Redmond, WA | June 2003 – Aug 2003</div>
+      </div>
+      <ul>
+        <li>Designed a UI for the VS open file switcher (Ctrl-Tab)</li>
+        <li>Created a service to provide gradient across VS and add-ins</li>
+        <li>
+          Built an app to compute method similarity, reducing time from O(n^2)
+          to O(n log n)
+        </li>
+        <li>Generated random XML docs from Schema</li>
+        <li>Automated dataset extraction using SQL and Perl scripts</li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-title">Publications</div>
+      <div class="twocol">
+        <div class="left">
+          3D Finite Element Analysis of No-Insulation Coils
+        </div>
+        <div class="right">Jan 2004</div>
+      </div>
+      <div class="small">Frodo Baggins, <em>John Doe</em>, Samwise Gamgee</div>
+      <div class="small">
+        <a href="https://doi.org/10.1109/TASC.2023.3340648"
+          >10.1109/TASC.2023.3340648</a
+        >
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">Projects</div>
+      <div class="twocol">
+        <div class="left">Multi-User Drawing Tool</div>
+        <div class="right">
+          <a href="https://github.com/sinaatalay/rendercv"
+            >github.com/name/repo</a
+          >
+        </div>
+      </div>
+      <ul>
+        <li>Electronic classroom with synchronized drawing</li>
+        <li>Tools Used: C++, MFC</li>
+      </ul>
+
+      <div class="twocol">
+        <div class="left">Synchronized Desktop Calendar</div>
+        <div class="right">
+          <a href="https://github.com/sinaatalay/rendercv"
+            >github.com/name/repo</a
+          >
+        </div>
+      </div>
+      <ul>
+        <li>Desktop calendar with shared scheduling</li>
+        <li>Tools Used: C#, .NET, SQL, XML</li>
+      </ul>
+
+      <div class="twocol">
+        <div class="left">Custom Operating System</div>
+        <div class="right">2002</div>
+      </div>
+      <ul>
+        <li>
+          Built a UNIX-style OS with scheduler, file system, text editor,
+          calculator
+        </li>
+        <li>Tools Used: C</li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="section-title">Technologies</div>
+      <div class="skills">
+        <span>C++</span>
+        <span>C</span>
+        <span>Java</span>
+        <span>Objective-C</span>
+        <span>C#</span>
+        <span>SQL</span>
+        <span>JavaScript</span><br />
+        <span>.NET</span>
+        <span>Microsoft SQL Server</span>
+        <span>XCode</span>
+        <span>Interface Builder</span>
+      </div>
+    </section>
+
+    <div class="small" style="text-align: right; margin-top: 20px; color: gray">
+      Last updated in September 2024
+    </div>
+  </body>
+</html>

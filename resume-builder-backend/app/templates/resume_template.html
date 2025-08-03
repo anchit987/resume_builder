@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ name }}'s CV</title>
+    <style>
+      body {
+        font-family: "Georgia", serif;
+        font-size: 11px;
+        color: #000;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.4;
+      }
+      h1 {
+        font-size: 24px;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      .contact {
+        text-align: center;
+        font-size: 10px;
+        margin-bottom: 16px;
+      }
+      section {
+        margin-top: 20px;
+      }
+      .section-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        border-bottom: 1px solid #000;
+        margin-bottom: 10px;
+        padding-bottom: 2px;
+        font-size: 12px;
+      }
+      .twocol {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .twocol .left {
+        flex: 1;
+        font-weight: bold;
+      }
+      .twocol .right {
+        flex: 1;
+        text-align: right;
+        font-style: italic;
+      }
+      ul {
+        padding-left: 16px;
+        margin: 4px 0 10px;
+      }
+      li {
+        margin-bottom: 3px;
+      }
+      .small {
+        font-size: 10px;
+        margin-bottom: 6px;
+      }
+      .skills span {
+        display: inline-block;
+        margin-right: 10px;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{ name }}</h1>
+    <div class="contact">
+      {% if location %}{{ location }}{% endif %} {% if email %} • {{ email }}{%
+      endif %} {% if phone %} • {{ phone }}{% endif %} {% if website %} • {{
+      website }}{% endif %} {% if linkedin %} • {{ linkedin }}{% endif %} {% if
+      github %} • {{ github }}{% endif %}
+    </div>
+
+    {% if summary %}
+    <section>
+      <div class="section-title">Summary</div>
+      <p>{{ summary }}</p>
+    </section>
+    {% endif %} {% if guide %}
+    <section>
+      <div class="section-title">Quick Guide</div>
+      <ul>
+        {% for item in guide %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %} {% if education %}
+    <section>
+      <div class="section-title">Education</div>
+      {% for edu in education %}
+      <div class="twocol">
+        <div class="left">{{ edu.institution }}</div>
+        <div class="right">{{ edu.duration }}</div>
+      </div>
+      <div class="small">{{ edu.degree }}</div>
+      <ul>
+        {% for point in edu.details %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+      {% endfor %}
+    </section>
+    {% endif %} {% if experience %}
+    <section>
+      <div class="section-title">Experience</div>
+      {% for job in experience %}
+      <div class="twocol">
+        <div class="left">{{ job.title }} - {{ job.company }}</div>
+        <div class="right">{{ job.location }} | {{ job.duration }}</div>
+      </div>
+      <ul>
+        {% for point in job.responsibilities %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+      {% endfor %}
+    </section>
+    {% endif %} {% if publications %}
+    <section>
+      <div class="section-title">Publications</div>
+      {% for pub in publications %}
+      <div class="twocol">
+        <div class="left">{{ pub.title }}</div>
+        <div class="right">{{ pub.date }}</div>
+      </div>
+      <div class="small">{{ pub.authors }}</div>
+      <div class="small"><a href="{{ pub.link }}">{{ pub.link }}</a></div>
+      {% endfor %}
+    </section>
+    {% endif %} {% if projects %}
+    <section>
+      <div class="section-title">Projects</div>
+      {% for proj in projects %}
+      <div class="twocol">
+        <div class="left">{{ proj.title }}</div>
+        <div class="right"><a href="{{ proj.link }}">{{ proj.link }}</a></div>
+      </div>
+      <ul>
+        {% for point in proj.description %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+      {% endfor %}
+    </section>
+    {% endif %} {% if skills %}
+    <section>
+      <div class="section-title">Technologies</div>
+      <div class="skills">
+        {% for skill in skills %}
+        <span>{{ skill }}</span>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <div class="small" style="text-align: right; margin-top: 20px; color: gray">
+      Last updated in {{ last_updated }}
+    </div>
+  </body>
+</html>

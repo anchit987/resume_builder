@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+sqlalchemy
+pydantic
+aiofiles
+pdfplumber
+python-docx
+python-dotenv
+requests
+openai
+weasyprint
+jinja2

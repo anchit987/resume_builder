@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.env
+*.sqlite3
+*.db
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Pytest cache
+.pytest_cache/
+
+# Migrations
+migrations/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Build
+build/
+dist/
+*.egg
