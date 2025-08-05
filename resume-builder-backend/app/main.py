@@ -13,6 +13,7 @@ from fastapi import (
     BackgroundTasks,
     HTTPException
 )
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from app import models, database, schemas
@@ -109,6 +110,7 @@ async def upload_resume(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user_input: str = Form(None),
+    target_role: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """Enhanced resume upload and processing endpoint."""
@@ -176,7 +178,7 @@ async def upload_resume(
         # Process with enhanced LLM handler
         logger.info("[UPLOAD] Processing with enhanced LLM...")
         try:
-            llm_response = llm_handler.call_llm_with_resume(text, user_input or "")
+            llm_response = llm_handler.call_llm_with_resume(text, user_input or "", target_role)
             logger.info("[UPLOAD] LLM processing completed successfully")
             
         except Exception as e:
