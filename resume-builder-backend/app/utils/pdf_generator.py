@@ -9,7 +9,7 @@ from typing import Dict, Tuple, Optional
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class EnhancedPDFGenerator:
-    """Enhanced PDF generator with proper LaTeX escaping to avoid broken % signs."""
+    """Enhanced PDF generator with robust LaTeX escaping and data cleaning."""
     
     def __init__(self, template_path: str = None):
         self.template_path = template_path or r"C://Users//HP//Desktop//resumebuilder//resume_builder//resume-builder-backend//app//templates"
@@ -29,6 +29,9 @@ class EnhancedPDFGenerator:
         
         self.no_escape_keys = {"website", "linkedin", "github", "portfolio", "link"}
     
+    # ---------------------------
+    # LaTeX Escaping & URL Detection
+    # ---------------------------
     def escape_latex(self, text: str) -> str:
         """Escape LaTeX special characters exactly once."""
         if not text or not isinstance(text, str):
@@ -44,9 +47,109 @@ class EnhancedPDFGenerator:
                 .replace("”", '"')
         )
 
-        # Use regex to escape special chars without double escaping
+        # Regex escape
         pattern = re.compile('|'.join(re.escape(c) for c in self.latex_escape))
         return pattern.sub(lambda m: self.latex_escape[m.group()], text)
+
+    def _is_url(self, text: str) -> bool:
+        return isinstance(text, str) and text.lower().startswith(('http://', 'https://', 'www.', 'mailto:'))
+
+    # ---------------------------
+    # Resume Data Cleaning
+    # ---------------------------
+    def validate_resume_data(self, resume_data: Dict) -> Dict:
+        """Validate, normalize, and deeply clean resume data to avoid empty LaTeX sections."""
+        
+        def _clean_str(val: str) -> Optional[str]:
+            return val.strip() if isinstance(val, str) and val.strip() else None
+
+        def _clean_list(lst):
+            if not isinstance(lst, list):
+                return []
+            cleaned = [_clean_str(x) for x in lst if isinstance(x, str)]
+            return [x for x in cleaned if x]  # remove None
+
+        cleaned_data = {
+            'name': _clean_str(resume_data.get('name')) or 'Name Not Provided',
+            'email': _clean_str(resume_data.get('email')) or '',
+            'phone': _clean_str(resume_data.get('phone')) or '',
+            'location': _clean_str(resume_data.get('location')) or '',
+            'linkedin': _clean_str(resume_data.get('linkedin')) or '',
+            'github': _clean_str(resume_data.get('github')) or '',
+            'portfolio': _clean_str(resume_data.get('portfolio')) or '',
+            'summary': _clean_str(resume_data.get('summary')) or '',
+            'skills': _clean_list(resume_data.get('skills', [])),
+            'certifications': _clean_list(resume_data.get('certifications', [])),
+        }
+
+        # --- Experience ---
+        cleaned_experience = []
+        for exp in resume_data.get('experience', []):
+            if isinstance(exp, dict):
+                desc = exp.get('description', [])
+                if isinstance(desc, str):
+                    desc = [desc]
+                if isinstance(desc, list):
+                    desc = _clean_list(desc)
+                
+                cleaned_exp = {
+                    'company': _clean_str(exp.get('company')) or '',
+                    'title': _clean_str(exp.get('title')) or '',
+                    'duration': _clean_str(exp.get('duration')) or '',
+                    'location': _clean_str(exp.get('location')) or '',
+                    'description': desc,
+                }
+                if cleaned_exp['company'] or cleaned_exp['title']:
+                    cleaned_experience.append(cleaned_exp)
+        cleaned_data['experience'] = cleaned_experience
+
+        # --- Education ---
+        cleaned_education = []
+        for edu in resume_data.get('education', []):
+            if isinstance(edu, dict):
+                cleaned_edu = {
+                    'institution': _clean_str(edu.get('institution')) or '',
+                    'degree': _clean_str(edu.get('degree')) or '',
+                    'duration': _clean_str(edu.get('duration')) or '',
+                    'location': _clean_str(edu.get('location')) or '',
+                    'gpa': _clean_str(edu.get('gpa')) or '',
+                    'honors': _clean_str(edu.get('honors')) or '',
+                }
+                if cleaned_edu['institution'] or cleaned_edu['degree']:
+                    cleaned_education.append(cleaned_edu)
+        cleaned_data['education'] = cleaned_education
+
+        # --- Projects ---
+        cleaned_projects = []
+        for proj in resume_data.get('projects', []):
+            if isinstance(proj, dict):
+                desc = proj.get('description', [])
+                if isinstance(desc, str):
+                    desc = [desc]
+                if isinstance(desc, list):
+                    desc = _clean_list(desc)
+                
+                cleaned_proj = {
+                    'title': _clean_str(proj.get('title')) or '',
+                    'description': desc,
+                    'tech_stack': _clean_str(proj.get('tech_stack')) or '',
+                    'link': _clean_str(proj.get('link')) or '',
+                }
+                if cleaned_proj['title'] or cleaned_proj['description']:
+                    cleaned_projects.append(cleaned_proj)
+        cleaned_data['projects'] = cleaned_projects
+
+        # Optional: recursively remove empty lists/dicts
+        return self._remove_empty(cleaned_data)
+
+    def _remove_empty(self, obj):
+        """Recursively remove empty lists, dicts, and strings."""
+        if isinstance(obj, dict):
+            return {k: self._remove_empty(v) for k, v in obj.items() if v not in [None, '', [], {}]}
+        elif isinstance(obj, list):
+            return [self._remove_empty(v) for v in obj if v not in [None, '', [], {}]]
+        else:
+            return obj
 
     def preprocess_resume_data(self, data, parent_key=None):
         """Recursively escape LaTeX characters with improved handling."""
@@ -59,86 +162,10 @@ class EnhancedPDFGenerator:
                 return data
             return self.escape_latex(data)
         return data
-    
-    def _is_url(self, text: str) -> bool:
-        return isinstance(text, str) and text.lower().startswith(('http://', 'https://', 'www.', 'mailto:'))
 
-    def validate_resume_data(self, resume_data: Dict) -> Dict:
-        """Validate and normalize resume data."""
-        cleaned_data = {}
-        cleaned_data['name'] = resume_data.get('name', 'Name Not Provided')
-        cleaned_data['email'] = resume_data.get('email', '')
-
-        for field in ['phone', 'location', 'linkedin', 'github', 'portfolio']:
-            val = resume_data.get(field, '')
-            if isinstance(val, str):
-                cleaned_data[field] = val.strip()
-
-        summary = resume_data.get('summary', '')
-        if isinstance(summary, str):
-            cleaned_data['summary'] = summary.strip()
-
-        skills = resume_data.get('skills', [])
-        cleaned_data['skills'] = [s.strip() for s in skills if isinstance(s, str)]
-
-        # Experience
-        cleaned_experience = []
-        for exp in resume_data.get('experience', []):
-            if isinstance(exp, dict):
-                desc = exp.get('description', [])
-                if isinstance(desc, str):
-                    desc = [desc]
-                cleaned_exp = {
-                    'company': exp.get('company', '').strip(),
-                    'title': exp.get('title', '').strip(),
-                    'duration': exp.get('duration', '').strip(),
-                    'location': exp.get('location', '').strip(),
-                    'description': [d.strip() for d in desc if isinstance(d, str) and d.strip()]
-                }
-                if cleaned_exp['company'] or cleaned_exp['title']:
-                    cleaned_experience.append(cleaned_exp)
-        cleaned_data['experience'] = cleaned_experience
-
-        # Education
-        cleaned_education = []
-        for edu in resume_data.get('education', []):
-            if isinstance(edu, dict):
-                cleaned_edu = {
-                    'institution': edu.get('institution', '').strip(),
-                    'degree': edu.get('degree', '').strip(),
-                    'duration': edu.get('duration', '').strip(),
-                    'location': edu.get('location', '').strip(),
-                    'gpa': edu.get('gpa', '').strip(),
-                    'honors': edu.get('honors', '').strip(),
-                }
-                if cleaned_edu['institution'] or cleaned_edu['degree']:
-                    cleaned_education.append(cleaned_edu)
-        cleaned_data['education'] = cleaned_education
-
-        # Projects
-        cleaned_projects = []
-        for proj in resume_data.get('projects', []):
-            if isinstance(proj, dict):
-                desc = proj.get('description', '')
-                if isinstance(desc, str):
-                    desc = desc.strip()
-                elif isinstance(desc, list):
-                    desc = [d.strip() for d in desc if isinstance(d, str)]
-                cleaned_proj = {
-                    'title': proj.get('title', '').strip(),
-                    'description': desc,
-                    'tech_stack': proj.get('tech_stack', '').strip(),
-                    'link': proj.get('link', '').strip(),
-                }
-                if cleaned_proj['title']:
-                    cleaned_projects.append(cleaned_proj)
-        cleaned_data['projects'] = cleaned_projects
-
-        cleaned_data['certifications'] = [
-            c.strip() for c in resume_data.get('certifications', []) if isinstance(c, str)
-        ]
-        return cleaned_data
-
+    # ---------------------------
+    # LaTeX Rendering
+    # ---------------------------
     def generate_latex_from_resume(self, resume_data: Dict) -> str:
         logging.info("Preprocessing resume data...")
         resume_data = self.preprocess_resume_data(self.validate_resume_data(resume_data))
@@ -156,6 +183,9 @@ class EnhancedPDFGenerator:
     def _batch_filter(self, items, size):
         return [items[i:i + size] for i in range(0, len(items), size)] if items else []
 
+    # ---------------------------
+    # PDF Rendering
+    # ---------------------------
     def check_latex_installation(self) -> Tuple[bool, str]:
         try:
             result = subprocess.run(['pdflatex', '--version'], capture_output=True, text=True, timeout=10)
@@ -196,8 +226,10 @@ class EnhancedPDFGenerator:
             for ext in ['.aux', '.log', '.out', '.fdb_latexmk', '.fls', '.synctex.gz']:
                 aux = os.path.join(output_dir, f"resume{ext}")
                 if os.path.exists(aux):
-                    try: os.remove(aux)
-                    except: pass
+                    try:
+                        os.remove(aux)
+                    except:
+                        pass
             return (pdf_file, combined_output) if return_log else pdf_file
         else:
             return (None, combined_output) if return_log else None

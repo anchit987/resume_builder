@@ -121,7 +121,7 @@ CRITICAL INSTRUCTIONS:
 
 4. EDUCATION & CERTIFICATIONS:
    - GPA must be in X.X/10 or NN.N% format.
-   - Include only real honors/awards.
+   - Include only real honors/awards if mentioned with the degree.
    - Highlight certifications relevant to {target_role}.
 
 5. OUTPUT REQUIREMENTS:
