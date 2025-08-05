@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    /* Dark theme as default */
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
+
+    --primary: 270 91% 65%;
+    --primary-foreground: 224 71% 4%;
+
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 213 31% 91%;
+
+    --muted: 215 25% 27%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 215 25% 27%;
+    --accent-foreground: 213 31% 91%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 25% 27%;
+    --input: 215 25% 27%;
+    --ring: 270 91% 65%;
+
+    --radius: 0.75rem;
+  }
+
+  /* Custom gradients and additional styling */
+  .gradient-purple-blue {
+    background: linear-gradient(135deg, hsl(270 91% 65%) 0%, hsl(221 83% 53%) 100%);
+  }
+
+  .gradient-card {
+    background: linear-gradient(145deg, hsl(215 25% 27% / 0.8) 0%, hsl(224 71% 4% / 0.9) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(215 25% 27% / 0.5);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    background: linear-gradient(135deg, hsl(224 71% 4%) 0%, hsl(215 25% 27%) 100%);
+    min-height: 100vh;
+  }
+
+  /* Smooth animations */
+  * {
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Fade in animation */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .fade-in-0 {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .duration-1000 {
+    animation-duration: 1s;
+  }
+
+  .duration-500 {
+    animation-duration: 0.5s;
+  }
+
+  /* Button animations */
+  button:hover {
+    transform: translateY(-1px);
+  }
+
+  button:active {
+    transform: translateY(0);
+  }
+
+  /* Card hover effects */
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(215 25% 27%);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(270 91% 65%);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(270 95% 75%);
+  }
+}
