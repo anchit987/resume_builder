@@ -66,7 +66,7 @@
 ((* if summary *))
 \section{Professional Summary}
 \small
-((( summary | replace("%","\\%") )))
+((( summary )))
 ((* endif *))
 
 % ---------------- Skills ----------------
@@ -75,7 +75,7 @@
 \small
 \begin{tabularx}{\textwidth}{@{}X@{}}
 ((* for skill in skills *))
-    ((( skill | replace("%","\\%") )))%
+    ((( skill )))%
     ((* if not loop.last *)),~((* endif *))
 ((* endfor *))
 \end{tabularx}
@@ -87,12 +87,12 @@
 \small
 ((* for exp in experience *))
 \begin{resumeSubHeading}
-    { ((( exp.title | replace("%","\\%") ))) }{ ((( exp.duration | replace("%","\\%") ))) }
-    { ((( exp.company | replace("%","\\%") ))) }{ ((( exp.location | replace("%","\\%") ))) }
+    { ((( exp.title ))) }{ ((( exp.duration ))) }
+    { ((( exp.company ))) }{ ((( exp.location ))) }
 \end{resumeSubHeading}
 \begin{itemize}
 ((* for point in exp.description *))
-    \item ((( point | replace("%","\\%") )))
+    \item ((( point )))
 ((* endfor *))
 \end{itemize}
 ((* endfor *))
@@ -104,18 +104,18 @@
 \small
 ((* for proj in projects *))
 \begin{resumeProjectHeading}
-    { ((( proj.title | replace("%","\\%") ))) }{ ((* if proj.link *))\href{((( proj.link )))}{Link}((* endif *)) }
+    { ((( proj.title ))) }{ ((* if proj.link *))\href{((( proj.link )))}{Link}((* endif *)) }
 \end{resumeProjectHeading}
 \begin{itemize}
 ((* if proj.description is string *))
-    \item ((( proj.description | replace("%","\\%") )))
+    \item ((( proj.description )))
 ((* else *))
     ((* for point in proj.description *))
-    \item ((( point | replace("%","\\%") )))
+    \item ((( point )))
     ((* endfor *))
 ((* endif *))
 ((* if proj.tech_stack *))
-    \item \textbf{Technologies:} ((( proj.tech_stack | replace("%","\\%") )))
+    \item \textbf{Technologies:} ((( proj.tech_stack )))
 ((* endif *))
 \end{itemize}
 ((* endfor *))
@@ -127,15 +127,15 @@
 \small
 ((* for edu in education *))
 \begin{resumeSubHeading}
-    { ((( edu.institution | replace("%","\\%") ))) }{ ((( edu.duration | replace("%","\\%") ))) }
-    { ((( edu.degree | replace("%","\\%") ))) }{ ((( edu.location | replace("%","\\%") ))) }
+    { ((( edu.institution ))) }{ ((( edu.duration ))) }
+    { ((( edu.degree ))) }{ ((( edu.location ))) }
 \end{resumeSubHeading}
 \begin{itemize}
     ((* if edu.gpa *))
-    \item \textbf{GPA:} ((( edu.gpa | replace("%","\\%") )))
+    \item \textbf{GPA:} ((( edu.gpa )))
     ((* endif *))
     ((* if edu.honors *))
-    \item \textbf{Honors:} ((( edu.honors | replace("%","\\%") )))
+    \item \textbf{Honors:} ((( edu.honors )))
     ((* endif *))
 \end{itemize}
 ((* endfor *))
@@ -147,7 +147,7 @@
 \small
 \begin{itemize}
 ((* for cert in certifications *))
-    \item ((( cert | replace("%","\\%") )))
+    \item ((( cert )))
 ((* endfor *))
 \end{itemize}
 ((* endif *))
