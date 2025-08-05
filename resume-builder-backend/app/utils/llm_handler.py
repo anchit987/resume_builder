@@ -76,20 +76,22 @@ class EnhancedLLMHandler:
         return parsed_json
 
     @staticmethod
-    def create_enhanced_prompt(resume_text: str, update_text: str = "") -> str:
-        """Create an enhanced prompt for better resume parsing."""
+    def create_enhanced_prompt(resume_text: str, update_text: str = "", target_role: str = "software engineer") -> str:
+        """Create an ATS-optimized prompt for resume parsing, adaptable to any target role."""
         
+        # 1. Optional update instructions from user
         update_section = ""
         if update_text:
             update_section = f"""
-IMPORTANT: The user has requested the following updates/changes:
+IMPORTANT: The user requested these changes:
 {update_text}
-
-Please incorporate these changes into the final output while maintaining accuracy.
+Please incorporate them while keeping accuracy intact.
 """
 
-        prompt = f"""You are a professional resume parser and ATS optimization expert. 
-Your task is to extract and structure resume information into a clean JSON format while enhancing readability and ATS compatibility.
+        # 2. Prompt now **lets the LLM infer keywords** instead of backend hardcoding
+        prompt = f"""
+You are a professional resume parser and ATS optimization expert.
+Your task is to extract and enhance the resume into a clean, ATS-friendly JSON.
 
 INPUT RESUME:
 ---
@@ -100,50 +102,42 @@ INPUT RESUME:
 
 CRITICAL INSTRUCTIONS:
 
-1. ACCURACY FIRST: Only extract information that is explicitly present in the resume. Never invent, assume, or hallucinate details.
+1. ACCURACY FIRST:
+   - Use only the data from the resume.
+   - Do NOT invent companies, degrees, or dates.
+   - You may rewrite bullet points to emphasize measurable impact and relevant technical skills.
 
-2. FIELD HANDLING:
-   - If a field is not present or unclear, omit it entirely from the JSON
-   - Do not use placeholders like "N/A", "unknown", or empty strings
-   - Maintain original factual content while improving language clarity
+2. ATS OPTIMIZATION:
+   - Target role: {target_role}
+   - **Identify and naturally integrate relevant industry keywords and skills** for this role.
+   - Keywords should align with tools, technologies, and responsibilities common for {target_role}.
+   - Rewrite summary & experience to highlight **action + impact + metrics**.
+   - Skills must be grouped logically by category.
 
-3. CONTENT ENHANCEMENT (without changing facts):
-   - Rewrite job descriptions as strong, action-oriented bullet points
-   - Use format: [Action Verb] + [What was accomplished] + [Quantified impact when possible]
-   - Improve grammar and professional tone while keeping all facts intact
-   - Make summary concise and impactful (2-3 sentences max)
-   - Standardize company names, tech terms, and certifications
+3. CONTENT ENHANCEMENT:
+   - Expand each job experience into 3–5 **bullet points** with **action verbs** and **quantifiable metrics**.
+   - Project descriptions should highlight **technical stack and outcomes**.
+   - Summary: 2–3 sentences tailored to {target_role}, emphasizing achievements and core strengths.
 
-4. EDUCATION FIELD RULES:
-   - GPA should be in one of these formats: X.X/10 or NN.N%
-   - Do not include semester-based CGPA notes in honors
-   - Honors should include only actual awards/distinctions (like Dean's List, Cum Laude)
-   - If no honors, omit the field completely
+4. EDUCATION & CERTIFICATIONS:
+   - GPA must be in X.X/10 or NN.N% format.
+   - Include only real honors/awards.
+   - Highlight certifications relevant to {target_role}.
 
-5. ATS OPTIMIZATION:
-   - Use industry-standard job titles and skill names
-   - Include relevant keywords naturally
-   - Ensure consistent formatting and terminology
-   - Remove special characters that might confuse ATS systems
-
-6. STRUCTURED OUTPUT:
-   - Return ONLY a valid JSON object
-   - No markdown formatting, explanations, or additional text
-   - Use the exact schema provided below
-   - Ensure all strings are properly escaped
-
-REQUIRED JSON SCHEMA:
+5. OUTPUT REQUIREMENTS:
+   - Return **ONLY valid JSON**, no markdown or extra explanation.
+   - JSON schema:
 {{
   "name": "Full legal name",
   "email": "primary@email.com",
   "phone": "formatted phone number",
-  "location": "City, State" or "City, Country",
+  "location": "City, State or City, Country",
   "linkedin": "https://linkedin.com/in/username",
   "github": "https://github.com/username",
   "portfolio": "https://portfolio-url.com",
-  "summary": "Professional summary optimized for ATS (2-3 sentences)",
+  "summary": "Professional summary tailored for {target_role}",
   "skills": [
-    "Technical skills categorized and formatted consistently"
+    "Technical skills grouped logically"
   ],
   "experience": [
     {{
@@ -152,8 +146,8 @@ REQUIRED JSON SCHEMA:
       "duration": "Start Date – End Date",
       "location": "City, State",
       "description": [
-        "Achievement-focused bullet point with metrics when available",
-        "Another accomplishment highlighting impact and results"
+        "Action + metric bullet relevant to {target_role}",
+        "Another bullet emphasizing impact or technical contribution"
       ]
     }}
   ],
@@ -164,13 +158,13 @@ REQUIRED JSON SCHEMA:
       "duration": "Start Year – End Year",
       "location": "City, State",
       "gpa": "X.X/10 or NN.N%",
-      "honors": "Actual awards or distinctions only"
+      "honors": "Only real awards/distinctions"
     }}
   ],
   "projects": [
     {{
       "title": "Project Name",
-      "description": "Brief description highlighting technical skills and impact",
+      "description": "Brief description emphasizing relevant skills and outcomes",
       "tech_stack": "Technologies used (comma-separated)",
       "link": "https://project-url.com"
     }}
@@ -181,17 +175,14 @@ REQUIRED JSON SCHEMA:
 }}
 
 QUALITY CHECKLIST:
-- All contact information accurately extracted
-- Job descriptions are action-oriented and quantified
-- Skills are properly categorized and use standard terminology
-- Dates are consistently formatted
-- No fictional or assumed information added
-- JSON is valid and complete
-- Summary is compelling but truthful
-
-OUTPUT: Return only the JSON object, nothing else."""
+- JSON only (no markdown, no extra text)
+- Experience shows **action + impact**
+- Skills grouped logically
+- Summary optimized for {target_role}
+- Role-specific keywords included naturally
+"""
         return prompt
-    
+
     def call_llm_with_resume(self, resume_text: str, update_text: str = "") -> str:
         """Enhanced LLM call with error handling, retries, and post-processing."""
         try:
@@ -239,7 +230,7 @@ Resume text:
 Return valid JSON with fields: name, email, phone, location, linkedin, github, summary, skills (array), experience (array with company, title, duration, description array), education (array with gpa and honors), projects (array), certifications (array).
 
 Rules:
-- GPA: X.X/10 or NN.N%
+- GPA: X.X/10 or NN.N
 - Honors: Only real awards/distinctions
 - No empty strings, omit missing fields
 
