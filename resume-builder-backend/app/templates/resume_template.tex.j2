@@ -1,0 +1,155 @@
+\documentclass[10pt,letterpaper]{article}
+
+% --- Packages ---
+\usepackage[margin=0.7in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tabularx}
+
+% --- Colors ---
+\definecolor{primary}{RGB}{0,50,100}
+\definecolor{linkcolor}{RGB}{0,102,204}
+\definecolor{graytext}{RGB}{60,60,60}
+
+% --- Hyperlinks ---
+\hypersetup{
+    colorlinks=true,
+    urlcolor=linkcolor
+}
+
+% --- Document Setup ---
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlist[itemize]{leftmargin=0.15in, topsep=2pt, itemsep=2pt}
+
+% --- Section Formatting ---
+\titleformat{\section}
+  {\large\bfseries\scshape\color{primary}}
+  {}{0em}{}[\titlerule\vspace{-4pt}]
+\titlespacing*{\section}{0pt}{10pt}{6pt}
+
+% --- Custom Environments ---
+\newenvironment{resumeSubHeading}[4]{%
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}%
+    \textbf{#1} & \textit{#2} \\
+    \textit{#3} & \textit{#4} \\
+  \end{tabular*}\vspace{-2pt}%
+}{}
+
+\newenvironment{resumeProjectHeading}[2]{%
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}%
+    \textbf{#1} & \textit{#2} \\
+  \end{tabular*}\vspace{-2pt}%
+}{}
+
+% --- Document Start ---
+\begin{document}
+
+% ---------------- Header ----------------
+\begin{center}
+    {\LARGE\bfseries ((( name ))) }\\[4pt]
+    \small
+    ((* if location *)) ((( location ))) ((* endif *))
+    ((* if phone *)) · ((( phone ))) ((* endif *))
+    ((* if email *)) · \href{mailto:((( email )))}{((( email )))} ((* endif *))
+    ((* if linkedin *)) · \href{((( linkedin )))}{LinkedIn} ((* endif *))
+    ((* if github *)) · \href{((( github )))}{GitHub} ((* endif *))
+\end{center}
+
+% ---------------- Summary ----------------
+((* if summary *))
+\section{Professional Summary}
+\small
+((( summary | replace("%","\\%") )))
+((* endif *))
+
+% ---------------- Skills ----------------
+((* if skills *))
+\section{Technical Skills}
+\small
+\begin{tabularx}{\textwidth}{@{}X@{}}
+((* for skill in skills *))
+    ((( skill | replace("%","\\%") )))%
+    ((* if not loop.last *)),~((* endif *))
+((* endfor *))
+\end{tabularx}
+((* endif *))
+
+% ---------------- Experience ----------------
+((* if experience *))
+\section{Professional Experience}
+\small
+((* for exp in experience *))
+\begin{resumeSubHeading}
+    { ((( exp.title | replace("%","\\%") ))) }{ ((( exp.duration | replace("%","\\%") ))) }
+    { ((( exp.company | replace("%","\\%") ))) }{ ((( exp.location | replace("%","\\%") ))) }
+\end{resumeSubHeading}
+\begin{itemize}
+((* for point in exp.description *))
+    \item ((( point | replace("%","\\%") )))
+((* endfor *))
+\end{itemize}
+((* endfor *))
+((* endif *))
+
+% ---------------- Projects ----------------
+((* if projects *))
+\section{Projects}
+\small
+((* for proj in projects *))
+\begin{resumeProjectHeading}
+    { ((( proj.title | replace("%","\\%") ))) }{ ((* if proj.link *))\href{((( proj.link )))}{Link}((* endif *)) }
+\end{resumeProjectHeading}
+\begin{itemize}
+((* if proj.description is string *))
+    \item ((( proj.description | replace("%","\\%") )))
+((* else *))
+    ((* for point in proj.description *))
+    \item ((( point | replace("%","\\%") )))
+    ((* endfor *))
+((* endif *))
+((* if proj.tech_stack *))
+    \item \textbf{Technologies:} ((( proj.tech_stack | replace("%","\\%") )))
+((* endif *))
+\end{itemize}
+((* endfor *))
+((* endif *))
+
+% ---------------- Education ----------------
+((* if education *))
+\section{Education}
+\small
+((* for edu in education *))
+\begin{resumeSubHeading}
+    { ((( edu.institution | replace("%","\\%") ))) }{ ((( edu.duration | replace("%","\\%") ))) }
+    { ((( edu.degree | replace("%","\\%") ))) }{ ((( edu.location | replace("%","\\%") ))) }
+\end{resumeSubHeading}
+\begin{itemize}
+    ((* if edu.gpa *))
+    \item \textbf{GPA:} ((( edu.gpa | replace("%","\\%") )))
+    ((* endif *))
+    ((* if edu.honors *))
+    \item \textbf{Honors:} ((( edu.honors | replace("%","\\%") )))
+    ((* endif *))
+\end{itemize}
+((* endfor *))
+((* endif *))
+
+% ---------------- Certifications ----------------
+((* if certifications *))
+\section{Certifications}
+\small
+\begin{itemize}
+((* for cert in certifications *))
+    \item ((( cert | replace("%","\\%") )))
+((* endfor *))
+\end{itemize}
+((* endif *))
+
+\end{document}
