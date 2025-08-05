@@ -1,80 +1,51 @@
-\documentclass[10pt, letterpaper]{article}
+\documentclass[10pt,letterpaper]{article}
 
 % --- Packages ---
-\usepackage[ignoreheadfoot, top=0.75in, bottom=0.75in, left=0.75in, right=0.75in]{geometry}
-\usepackage{titlesec, tabularx, array, xcolor, enumitem, amsmath, fontawesome5}
-\usepackage[
-    pdftitle={((( name ))) Resume},
-    pdfauthor={((( name )))},
-    pdfcreator={LaTeX Resume Builder},
+\usepackage[margin=0.7in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tabularx}
+
+% --- Colors ---
+\definecolor{primary}{RGB}{0,50,100}
+\definecolor{linkcolor}{RGB}{0,102,204}
+\definecolor{graytext}{RGB}{60,60,60}
+
+% --- Hyperlinks ---
+\hypersetup{
     colorlinks=true,
-    urlcolor=linkColor,
-    pdfborder={0 0 0}
-]{hyperref}
-\usepackage{calc, bookmark, lastpage, changepage, paracol, ifthen, needspace, iftex}
+    urlcolor=linkcolor
+}
 
-% --- Color Definitions ---
-\definecolor{primaryColor}{RGB}{0, 51, 102}      % Professional dark blue
-\definecolor{linkColor}{RGB}{0, 102, 204}        % Lighter blue for links
-\definecolor{sectionColor}{RGB}{51, 51, 51}      % Dark gray for sections
-\definecolor{textColor}{RGB}{33, 37, 41}         % Near black for text
-
-% --- ATS Friendly Settings ---
-\ifPDFTeX
-    \input{glyphtounicode}
-    \pdfgentounicode=1
-    \usepackage[utf8]{inputenc}
-    \usepackage[T1]{fontenc}
-    \usepackage{lmodern}
-\fi
-
-% --- Layout Settings ---
+% --- Document Setup ---
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0pt}
-\color{textColor}
-
-% --- Custom Commands ---
-\newcommand{\sectionspacing}{\vspace{10pt}}
-\newcommand{\itemspacing}{\vspace{2pt}}
+\setlist[itemize]{leftmargin=0.15in, topsep=2pt, itemsep=2pt}
 
 % --- Section Formatting ---
 \titleformat{\section}
-    {\large\bfseries\color{sectionColor}}
-    {}{0em}{}[\color{primaryColor}\titlerule\vspace{4pt}]
-
-\titlespacing*{\section}{0pt}{12pt}{6pt}
-
-% --- List Environments ---
-\setlist[itemize]{
-    leftmargin=0.45cm,
-    rightmargin=0cm,
-    topsep=2pt,
-    itemsep=2pt,
-    parsep=0pt,
-    partopsep=0pt,
-    label={$\bullet$}
-}
+  {\large\bfseries\scshape\color{primary}}
+  {}{0em}{}[\titlerule\vspace{-4pt}]
+\titlespacing*{\section}{0pt}{10pt}{6pt}
 
 % --- Custom Environments ---
-\newenvironment{resumeSubHeading}[4]{
-    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
-        \textbf{#1} & \textit{#2} \\
-        \textit{#3} & \textit{#4} \\
-    \end{tabular*}\vspace{-2pt}
+\newenvironment{resumeSubHeading}[4]{%
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}%
+    \textbf{#1} & \textit{#2} \\
+    \textit{#3} & \textit{#4} \\
+  \end{tabular*}\vspace{-2pt}%
 }{}
 
-\newenvironment{resumeProjectHeading}[2]{
-    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
-        \textbf{#1} & \textit{#2} \\
-    \end{tabular*}\vspace{-2pt}
-}{}
-
-\newenvironment{resumeEducationHeading}[4]{
-    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
-        \textbf{#1} & \textit{#2} \\
-        \textit{#3} & \textit{#4} \\
-    \end{tabular*}\vspace{-2pt}
+\newenvironment{resumeProjectHeading}[2]{%
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}%
+    \textbf{#1} & \textit{#2} \\
+  \end{tabular*}\vspace{-2pt}%
 }{}
 
 % --- Document Start ---
@@ -82,44 +53,32 @@
 
 % ---------------- Header ----------------
 \begin{center}
-    {\LARGE\bfseries\color{primaryColor} ((( name ))) }\\[8pt]
-    \footnotesize
+    {\LARGE\bfseries ((( name ))) }\\[4pt]
+    \small
     ((* if location *)) ((( location ))) ((* endif *))
-    ((* if phone and location *)) $\cdot$ ((* endif *))
-    ((* if phone *)) ((( phone ))) ((* endif *))
-    ((* if email and (phone or location) *)) $\cdot$ ((* endif *))
-    \href{mailto:((( email )))}{((( email )))}
-    ((* if linkedin *)) $\cdot$ \href{((( linkedin )))}{\underline{LinkedIn}} ((* endif *))
-    ((* if github *)) $\cdot$ \href{((( github )))}{\underline{GitHub}} ((* endif *))
-    ((* if portfolio *)) $\cdot$ \href{((( portfolio )))}{\underline{Portfolio}} ((* endif *))
+    ((* if phone *)) · ((( phone ))) ((* endif *))
+    ((* if email *)) · \href{mailto:((( email )))}{((( email )))} ((* endif *))
+    ((* if linkedin *)) · \href{((( linkedin )))}{LinkedIn} ((* endif *))
+    ((* if github *)) · \href{((( github )))}{GitHub} ((* endif *))
 \end{center}
 
-\sectionspacing
-
-% ---------------- Professional Summary ----------------
+% ---------------- Summary ----------------
 ((* if summary *))
 \section{Professional Summary}
 \small
-\begin{adjustwidth}{0.1cm}{0.1cm}
-((( summary )))
-\end{adjustwidth}
-\sectionspacing
+((( summary | replace("%","\\%") )))
 ((* endif *))
 
 % ---------------- Skills ----------------
 ((* if skills *))
 \section{Technical Skills}
 \small
-\begin{itemize}
-    ((* set skill_chunks = skills | batch(3) *))
-    ((* for chunk in skill_chunks *))
-    \item 
-        ((* for skill in chunk *))
-        \textbf{ ((( skill ))) }((* if not loop.last *)) $\cdot$ ((* endif *))
-        ((* endfor *))
-    ((* endfor *))
-\end{itemize}
-\sectionspacing
+\begin{tabularx}{\textwidth}{@{}X@{}}
+((* for skill in skills *))
+    ((( skill | replace("%","\\%") )))%
+    ((* if not loop.last *)),~((* endif *))
+((* endfor *))
+\end{tabularx}
 ((* endif *))
 
 % ---------------- Experience ----------------
@@ -128,20 +87,15 @@
 \small
 ((* for exp in experience *))
 \begin{resumeSubHeading}
-    { ((( exp.title ))) }{ ((* if exp.duration *))((( exp.duration )))((* endif *)) }
-    { ((( exp.company ))) }{ ((* if exp.location *))((( exp.location )))((* endif *)) }
+    { ((( exp.title | replace("%","\\%") ))) }{ ((( exp.duration | replace("%","\\%") ))) }
+    { ((( exp.company | replace("%","\\%") ))) }{ ((( exp.location | replace("%","\\%") ))) }
 \end{resumeSubHeading}
-((* if exp.description *))
-\vspace{-2pt}
 \begin{itemize}
-    ((* for point in exp.description *))
-    \item ((( point | replace("%", "\%") )))
-    ((* endfor *))
-\end{itemize}
-((* endif *))
-\vspace{4pt}
+((* for point in exp.description *))
+    \item ((( point | replace("%","\\%") )))
 ((* endfor *))
-\sectionspacing
+\end{itemize}
+((* endfor *))
 ((* endif *))
 
 % ---------------- Projects ----------------
@@ -150,25 +104,21 @@
 \small
 ((* for proj in projects *))
 \begin{resumeProjectHeading}
-    { ((( proj.title ))) }{ ((* if proj.link *))\href{((( proj.link )))}{\underline{Link}}((* endif *)) }
+    { ((( proj.title | replace("%","\\%") ))) }{ ((* if proj.link *))\href{((( proj.link )))}{Link}((* endif *)) }
 \end{resumeProjectHeading}
-((* if proj.description *))
 \begin{itemize}
-    ((* if proj.description is string *))
-    \item ((( proj.description | replace("%", "\%") )))
-    ((* else *))
-        ((* for point in proj.description *))
-        \item ((( point | replace("%", "\%") )))
-        ((* endfor *))
-    ((* endif *))
-    ((* if proj.tech_stack *))
-    \item \textbf{Technologies:} ((( proj.tech_stack )))
-    ((* endif *))
-\end{itemize}
+((* if proj.description is string *))
+    \item ((( proj.description | replace("%","\\%") )))
+((* else *))
+    ((* for point in proj.description *))
+    \item ((( point | replace("%","\\%") )))
+    ((* endfor *))
 ((* endif *))
-\vspace{4pt}
+((* if proj.tech_stack *))
+    \item \textbf{Technologies:} ((( proj.tech_stack | replace("%","\\%") )))
+((* endif *))
+\end{itemize}
 ((* endfor *))
-\sectionspacing
 ((* endif *))
 
 % ---------------- Education ----------------
@@ -176,23 +126,19 @@
 \section{Education}
 \small
 ((* for edu in education *))
-\begin{resumeEducationHeading}
-    { ((( edu.institution ))) }{ ((* if edu.duration *))((( edu.duration )))((* endif *)) }
-    { ((( edu.degree ))) }{ ((* if edu.location *))((( edu.location )))((* endif *)) }
-\end{resumeEducationHeading}
-((* if edu.gpa or edu.honors *))
+\begin{resumeSubHeading}
+    { ((( edu.institution | replace("%","\\%") ))) }{ ((( edu.duration | replace("%","\\%") ))) }
+    { ((( edu.degree | replace("%","\\%") ))) }{ ((( edu.location | replace("%","\\%") ))) }
+\end{resumeSubHeading}
 \begin{itemize}
     ((* if edu.gpa *))
-    \item \textbf{GPA:} ((( edu.gpa | replace("%", "\%") )))
+    \item \textbf{GPA:} ((( edu.gpa | replace("%","\\%") )))
     ((* endif *))
     ((* if edu.honors *))
-    \item \textbf{Honors:} ((( edu.honors )))
+    \item \textbf{Honors:} ((( edu.honors | replace("%","\\%") )))
     ((* endif *))
 \end{itemize}
-((* endif *))
-\vspace{4pt}
 ((* endfor *))
-\sectionspacing
 ((* endif *))
 
 % ---------------- Certifications ----------------
@@ -200,9 +146,9 @@
 \section{Certifications}
 \small
 \begin{itemize}
-    ((* for cert in certifications *))
-    \item ((( cert )))
-    ((* endfor *))
+((* for cert in certifications *))
+    \item ((( cert | replace("%","\\%") )))
+((* endfor *))
 \end{itemize}
 ((* endif *))
 
