@@ -183,11 +183,11 @@ QUALITY CHECKLIST:
 """
         return prompt
 
-    def call_llm_with_resume(self, resume_text: str, update_text: str = "") -> str:
+    def call_llm_with_resume(self, resume_text: str, update_text: str = "", target_role: str = "") -> str:
         """Enhanced LLM call with error handling, retries, and post-processing."""
         try:
-            prompt = self.create_enhanced_prompt(resume_text, update_text)
-            
+            prompt = self.create_enhanced_prompt(resume_text, update_text, target_role)
+
             response = client.chat.completions.create(
                 model="Meta-Llama-3.3-70B-Instruct",
                 messages=[
@@ -257,7 +257,7 @@ JSON only, no markdown:"""
             raise Exception(f"Retry attempt failed: {str(e)}")
 
 # Factory function for backward compatibility
-def call_llm_with_resume(resume_text: str, update_text: str = "") -> str:
+def call_llm_with_resume(self, resume_text: str, update_text: str = "", target_role: str = "") -> str:
     """Backward compatible LLM handler function."""
     handler = EnhancedLLMHandler()
-    return handler.call_llm_with_resume(resume_text, update_text)
+    return handler.call_llm_with_resume(resume_text, update_text, target_role)
