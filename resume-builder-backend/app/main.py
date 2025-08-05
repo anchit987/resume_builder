@@ -1,3 +1,4 @@
+from fastapi.responses import FileResponse, JSONResponse
 import os
 import json
 import re
@@ -10,7 +11,6 @@ from fastapi import (
     Form,
     BackgroundTasks,
 )
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from app import models, database, schemas
@@ -36,6 +36,7 @@ app.add_middleware(
 
 models.Base.metadata.create_all(bind=database.engine)
 
+
 def get_db():
     db = database.SessionLocal()
     try:
@@ -43,7 +44,8 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/upload", response_class=FileResponse)
+
+@app.post("/upload")
 async def upload_resume(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -57,7 +59,7 @@ async def upload_resume(
 
     if ext not in [".pdf", ".docx"]:
         print("[UPLOAD] Unsupported file type")
-        return {"error": "Unsupported file type"}
+        return JSONResponse({"error": "Unsupported file type"}, status_code=400)
 
     temp_path = os.path.join(TEMP_DIR, file.filename)
     print("[UPLOAD] Saving temp file at:", temp_path)
@@ -101,7 +103,7 @@ async def upload_resume(
     except Exception as e:
         print("[UPLOAD] JSON parsing failed:", e)
         print("[UPLOAD] Invalid JSON content:", llm_response)
-        return {"error": "Invalid response from language model"}
+        return JSONResponse({"error": "Invalid response from language model"}, status_code=500)
 
     print("[UPLOAD] Parsed JSON keys:", parsed_json.keys())
 
@@ -123,13 +125,17 @@ async def upload_resume(
 
     print("[UPLOAD] Resume data prepared for PDF rendering")
 
-    pdf_path = pdf_generator.render_resume_to_pdf(resume_data, TEMP_DIR)
+    pdf_path, log_output = pdf_generator.render_resume_to_pdf(resume_data, TEMP_DIR, return_log=True)
 
     print("[UPLOAD] PDF path returned:", pdf_path, type(pdf_path))
-    if not isinstance(pdf_path, str):
-        print("[UPLOAD] ERROR - pdf_path is not a string")
-        return {"error": "PDF generation returned invalid path"}
 
+    # Check if PDF generation failed
+    if not pdf_path or not os.path.exists(pdf_path):
+        print("[UPLOAD] ERROR - PDF generation failed")
+        print("[UPLOAD] pdflatex output:\n", log_output)
+        return JSONResponse({"error": "PDF generation failed", "log": log_output}, status_code=500)
+
+    # Schedule cleanup for later
     background_tasks.add_task(cleanup.cleanup_file, pdf_path)
 
     print("[UPLOAD] Returning FileResponse")
