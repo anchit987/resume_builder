@@ -1,140 +1,209 @@
 \documentclass[10pt, letterpaper]{article}
 
 % --- Packages ---
-\usepackage[ignoreheadfoot, top=1.8cm, bottom=1.8cm, left=1.8cm, right=1.8cm, footskip=1.0cm]{geometry}
-\usepackage{titlesec, tabularx, array, xcolor, enumitem, amsmath}
+\usepackage[ignoreheadfoot, top=0.75in, bottom=0.75in, left=0.75in, right=0.75in]{geometry}
+\usepackage{titlesec, tabularx, array, xcolor, enumitem, amsmath, fontawesome5}
 \usepackage[
-    pdftitle={ {{ name }} Resume },
-    pdfauthor={ {{ name }} },
-    pdfcreator={LaTeX with Python},
+    pdftitle={((( name ))) Resume},
+    pdfauthor={((( name )))},
+    pdfcreator={LaTeX Resume Builder},
     colorlinks=true,
-    urlcolor=primaryColor
+    urlcolor=linkColor,
+    pdfborder={0 0 0}
 ]{hyperref}
-\usepackage[pscoord]{eso-pic}
-\usepackage{calc, bookmark, lastpage, changepage, paracol, ifthen, needspace, iftex, multicol}
+\usepackage{calc, bookmark, lastpage, changepage, paracol, ifthen, needspace, iftex}
 
-% --- Color & Font ---
-\definecolor{primaryColor}{RGB}{0, 79, 144}
+% --- Color Definitions ---
+\definecolor{primaryColor}{RGB}{0, 51, 102}      % Professional dark blue
+\definecolor{linkColor}{RGB}{0, 102, 204}        % Lighter blue for links
+\definecolor{sectionColor}{RGB}{51, 51, 51}      % Dark gray for sections
+\definecolor{textColor}{RGB}{33, 37, 41}         % Near black for text
 
-% --- ATS friendly text settings ---
+% --- ATS Friendly Settings ---
 \ifPDFTeX
     \input{glyphtounicode}
     \pdfgentounicode=1
     \usepackage[utf8]{inputenc}
+    \usepackage[T1]{fontenc}
     \usepackage{lmodern}
 \fi
 
-% --- Styling ---
+% --- Layout Settings ---
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\columnsep}{0.2cm}
-\renewcommand\labelitemi{--} % simple bullet for ATS
+\setlength{\parskip}{0pt}
+\color{textColor}
 
-\titleformat{\section}{\large\bfseries\color{primaryColor}}{}{0em}{}[\titlerule]
+% --- Custom Commands ---
+\newcommand{\sectionspacing}{\vspace{10pt}}
+\newcommand{\itemspacing}{\vspace{2pt}}
 
-\newenvironment{highlights}{\begin{itemize}[topsep=0.1cm,parsep=0.1cm,itemsep=0pt,leftmargin=0.4cm]}{\end{itemize}}
-\newenvironment{onecolentry}{\begin{adjustwidth}{0.2cm}{0.2cm}}{\end{adjustwidth}}
-\newenvironment{twocolentry}[1]{\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}} l r }#1 &}{\end{tabular*}}
+% --- Section Formatting ---
+\titleformat{\section}
+    {\large\bfseries\color{sectionColor}}
+    {}{0em}{}[\color{primaryColor}\titlerule\vspace{4pt}]
+
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+% --- List Environments ---
+\setlist[itemize]{
+    leftmargin=0.45cm,
+    rightmargin=0cm,
+    topsep=2pt,
+    itemsep=2pt,
+    parsep=0pt,
+    partopsep=0pt,
+    label={$\bullet$}
+}
+
+% --- Custom Environments ---
+\newenvironment{resumeSubHeading}[4]{
+    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+        \textbf{#1} & \textit{#2} \\
+        \textit{#3} & \textit{#4} \\
+    \end{tabular*}\vspace{-2pt}
+}{}
+
+\newenvironment{resumeProjectHeading}[2]{
+    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+        \textbf{#1} & \textit{#2} \\
+    \end{tabular*}\vspace{-2pt}
+}{}
+
+\newenvironment{resumeEducationHeading}[4]{
+    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+        \textbf{#1} & \textit{#2} \\
+        \textit{#3} & \textit{#4} \\
+    \end{tabular*}\vspace{-2pt}
+}{}
 
 % --- Document Start ---
 \begin{document}
 
 % ---------------- Header ----------------
 \begin{center}
-    {\fontsize{20pt}{20pt}\selectfont \textbf{ {{ name }} }}\\[0.2cm]
+    {\LARGE\bfseries\color{primaryColor} ((( name ))) }\\[8pt]
     \footnotesize
-    {% if location %} {{ location }} $\vert$ {% endif %}
-    \href{mailto:{{ email }}}{{ email }} 
-    {% if phone %} $\vert$ {{ phone }} {% endif %}
-    {% if website %} $\vert$ \href{ {{ website }} }{ {{ website }} } {% endif %}
-    {% if linkedin %} $\vert$ \href{ {{ linkedin }} }{ LinkedIn } {% endif %}
-    {% if github %} $\vert$ \href{ {{ github }} }{ GitHub } {% endif %}
+    ((* if location *)) ((( location ))) ((* endif *))
+    ((* if phone and location *)) $\cdot$ ((* endif *))
+    ((* if phone *)) ((( phone ))) ((* endif *))
+    ((* if email and (phone or location) *)) $\cdot$ ((* endif *))
+    \href{mailto:((( email )))}{((( email )))}
+    ((* if linkedin *)) $\cdot$ \href{((( linkedin )))}{\underline{LinkedIn}} ((* endif *))
+    ((* if github *)) $\cdot$ \href{((( github )))}{\underline{GitHub}} ((* endif *))
+    ((* if portfolio *)) $\cdot$ \href{((( portfolio )))}{\underline{Portfolio}} ((* endif *))
 \end{center}
 
-\vspace{0.2cm}
+\sectionspacing
 
-% ---------------- Summary ----------------
-{% if summary %}
-\section*{Professional Summary}
-\begin{onecolentry}
-    {{ summary }}
-\end{onecolentry}
-{% endif %}
+% ---------------- Professional Summary ----------------
+((* if summary *))
+\section{Professional Summary}
+\small
+\begin{adjustwidth}{0.1cm}{0.1cm}
+((( summary )))
+\end{adjustwidth}
+\sectionspacing
+((* endif *))
 
 % ---------------- Skills ----------------
-{% if skills %}
-\section*{Skills}
-\begin{onecolentry}
-    \begin{multicols}{3} % display horizontally
-        \begin{itemize}[leftmargin=*]
-        {% for skill in skills %}
-            \item {{ skill }}
-        {% endfor %}
-        \end{itemize}
-    \end{multicols}
-\end{onecolentry}
-{% endif %}
+((* if skills *))
+\section{Technical Skills}
+\small
+\begin{itemize}
+    ((* set skill_chunks = skills | batch(3) *))
+    ((* for chunk in skill_chunks *))
+    \item 
+        ((* for skill in chunk *))
+        \textbf{ ((( skill ))) }((* if not loop.last *)) $\cdot$ ((* endif *))
+        ((* endfor *))
+    ((* endfor *))
+\end{itemize}
+\sectionspacing
+((* endif *))
 
 % ---------------- Experience ----------------
-{% if experience %}
-\section*{Experience}
-{% for exp in experience %}
-\begin{twocolentry}{\textit{% if exp.duration %}{{ exp.duration }}{% endif %}}
-    \textbf{ {{ exp.title }} } \\ 
-    \textit{ {{ exp.company }} }
-\end{twocolentry}
-\begin{onecolentry}
-    \begin{highlights}
-    {% for point in exp.description %}
-        \item {{ point }}
-    {% endfor %}
-    \end{highlights}
-\end{onecolentry}
-{% endfor %}
-{% endif %}
-
-% ---------------- Education ----------------
-{% if education %}
-\section*{Education}
-{% for edu in education %}
-\begin{twocolentry}{\textit{% if edu.duration %}{{ edu.duration }}{% endif %}}
-    \textbf{ {{ edu.institution }} } \\ 
-    \textit{ {{ edu.degree }} }
-\end{twocolentry}
-{% endfor %}
-{% endif %}
+((* if experience *))
+\section{Professional Experience}
+\small
+((* for exp in experience *))
+\begin{resumeSubHeading}
+    { ((( exp.title ))) }{ ((* if exp.duration *))((( exp.duration )))((* endif *)) }
+    { ((( exp.company ))) }{ ((* if exp.location *))((( exp.location )))((* endif *)) }
+\end{resumeSubHeading}
+((* if exp.description *))
+\vspace{-2pt}
+\begin{itemize}
+    ((* for point in exp.description *))
+    \item ((( point | replace("%", "\%") )))
+    ((* endfor *))
+\end{itemize}
+((* endif *))
+\vspace{4pt}
+((* endfor *))
+\sectionspacing
+((* endif *))
 
 % ---------------- Projects ----------------
-{% if projects %}
-\section*{Projects}
-{% for proj in projects %}
-\begin{twocolentry}{}
-    \textbf{ {{ proj.title }} }
-\end{twocolentry}
-\begin{onecolentry}
-    \begin{highlights}
-    {% if proj.description is string %}
-        \item {{ proj.description }}
-    {% else %}
-        {% for point in proj.description %}
-            \item {{ point }}
-        {% endfor %}
-    {% endif %}
-    \end{highlights}
-\end{onecolentry}
-{% endfor %}
-{% endif %}
+((* if projects *))
+\section{Projects}
+\small
+((* for proj in projects *))
+\begin{resumeProjectHeading}
+    { ((( proj.title ))) }{ ((* if proj.link *))\href{((( proj.link )))}{\underline{Link}}((* endif *)) }
+\end{resumeProjectHeading}
+((* if proj.description *))
+\begin{itemize}
+    ((* if proj.description is string *))
+    \item ((( proj.description | replace("%", "\%") )))
+    ((* else *))
+        ((* for point in proj.description *))
+        \item ((( point | replace("%", "\%") )))
+        ((* endfor *))
+    ((* endif *))
+    ((* if proj.tech_stack *))
+    \item \textbf{Technologies:} ((( proj.tech_stack )))
+    ((* endif *))
+\end{itemize}
+((* endif *))
+\vspace{4pt}
+((* endfor *))
+\sectionspacing
+((* endif *))
+
+% ---------------- Education ----------------
+((* if education *))
+\section{Education}
+\small
+((* for edu in education *))
+\begin{resumeEducationHeading}
+    { ((( edu.institution ))) }{ ((* if edu.duration *))((( edu.duration )))((* endif *)) }
+    { ((( edu.degree ))) }{ ((* if edu.location *))((( edu.location )))((* endif *)) }
+\end{resumeEducationHeading}
+((* if edu.gpa or edu.honors *))
+\begin{itemize}
+    ((* if edu.gpa *))
+    \item \textbf{GPA:} ((( edu.gpa | replace("%", "\%") )))
+    ((* endif *))
+    ((* if edu.honors *))
+    \item \textbf{Honors:} ((( edu.honors )))
+    ((* endif *))
+\end{itemize}
+((* endif *))
+\vspace{4pt}
+((* endfor *))
+\sectionspacing
+((* endif *))
 
 % ---------------- Certifications ----------------
-{% if certifications %}
-\section*{Certifications}
-\begin{onecolentry}
-    \begin{itemize}[leftmargin=*]
-    {% for cert in certifications %}
-        \item {{ cert }}
-    {% endfor %}
-    \end{itemize}
-\end{onecolentry}
-{% endif %}
+((* if certifications *))
+\section{Certifications}
+\small
+\begin{itemize}
+    ((* for cert in certifications *))
+    \item ((( cert )))
+    ((* endfor *))
+\end{itemize}
+((* endif *))
 
 \end{document}
