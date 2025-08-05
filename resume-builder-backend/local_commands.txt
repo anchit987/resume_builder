@@ -1,6 +1,12 @@
 python -m venv venv
 venv\Scripts\activate  #for Linux: source venv/bin/activate  
 pip install -r requirements.txt
-set PATH=%PATH%;C:\Users\HP\AppData\Local\Programs\MiKTeX\miktex\bin\x64
+set PATH=%PATH%;C:\Users\asus\AppData\Local\Programs\MiKTeX\miktex\bin\x64
 
-uvicorn app.main:app --reload --port 7778
+
+
+uvicorn app.main:app --reload --port 7777
+
+
+Imp Notes:
+During miktex installation, check the box to install missing packages on-the-fly.
