@@ -2,7 +2,7 @@ from openai import OpenAI
 from app.config import LLM_API_KEY
 import json
 import re
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 
 # SambaNova-compatible OpenAI client
 client = OpenAI(
@@ -11,13 +11,13 @@ client = OpenAI(
 )
 
 class EnhancedLLMHandler:
-    """Enhanced LLM handler with better prompting and error handling."""
+    """Enhanced LLM handler for resume parsing with strict JSON validation and cleanup."""
     
     @staticmethod
     def validate_json_response(response: str) -> tuple[bool, Optional[Dict], str]:
         """Validate and clean JSON response from LLM."""
         try:
-            # Try to parse as-is first
+            # Try direct parsing first
             parsed = json.loads(response)
             return True, parsed, "Valid JSON"
         except json.JSONDecodeError:
@@ -42,7 +42,39 @@ class EnhancedLLMHandler:
                 pass
         
         return False, None, f"No valid JSON found in response: {response[:200]}..."
-    
+
+    @staticmethod
+    def clean_resume_json(parsed_json: dict) -> dict:
+        """Clean and standardize the LLM JSON output."""
+        
+        # Normalize education fields
+        for edu in parsed_json.get("education", []):
+            # Standardize GPA format
+            if "gpa" in edu and edu["gpa"]:
+                gpa_str = edu["gpa"].strip()
+                
+                # Convert percentage to X.X/100 format
+                perc_match = re.search(r"(\d+\.?\d*)%", gpa_str)
+                if perc_match:
+                    edu["gpa"] = f"{perc_match.group(1)}/100"
+                
+                # Convert single number to /10 scale
+                elif re.fullmatch(r"\d+\.?\d*", gpa_str):
+                    edu["gpa"] = f"{gpa_str}/10"
+            
+            # Remove honors if it's empty or just GPA-related
+            if "honors" in edu:
+                honors = edu["honors"].strip()
+                if not honors or "cgpa" in honors.lower() or "gpa" in honors.lower():
+                    edu.pop("honors", None)
+        
+        # Remove empty optional fields at the top level
+        for key in ["linkedin", "github", "portfolio"]:
+            if key in parsed_json and (not parsed_json[key] or parsed_json[key].strip() == ""):
+                parsed_json.pop(key, None)
+        
+        return parsed_json
+
     @staticmethod
     def create_enhanced_prompt(resume_text: str, update_text: str = "") -> str:
         """Create an enhanced prompt for better resume parsing."""
@@ -56,7 +88,8 @@ IMPORTANT: The user has requested the following updates/changes:
 Please incorporate these changes into the final output while maintaining accuracy.
 """
 
-        prompt = f"""You are a professional resume parser and ATS optimization expert. Your task is to extract and structure resume information into a clean JSON format while enhancing readability and ATS compatibility.
+        prompt = f"""You are a professional resume parser and ATS optimization expert. 
+Your task is to extract and structure resume information into a clean JSON format while enhancing readability and ATS compatibility.
 
 INPUT RESUME:
 ---
@@ -81,13 +114,19 @@ CRITICAL INSTRUCTIONS:
    - Make summary concise and impactful (2-3 sentences max)
    - Standardize company names, tech terms, and certifications
 
-4. ATS OPTIMIZATION:
+4. EDUCATION FIELD RULES:
+   - GPA should be in one of these formats: X.X/10 or NN.N%
+   - Do not include semester-based CGPA notes in honors
+   - Honors should include only actual awards/distinctions (like Dean's List, Cum Laude)
+   - If no honors, omit the field completely
+
+5. ATS OPTIMIZATION:
    - Use industry-standard job titles and skill names
    - Include relevant keywords naturally
    - Ensure consistent formatting and terminology
    - Remove special characters that might confuse ATS systems
 
-5. STRUCTURED OUTPUT:
+6. STRUCTURED OUTPUT:
    - Return ONLY a valid JSON object
    - No markdown formatting, explanations, or additional text
    - Use the exact schema provided below
@@ -124,8 +163,8 @@ REQUIRED JSON SCHEMA:
       "institution": "University/School Name",
       "duration": "Start Year – End Year",
       "location": "City, State",
-      "gpa": "X.X/4.0",
-      "honors": "Relevant honors or distinctions"
+      "gpa": "X.X/10 or NN.N%",
+      "honors": "Actual awards or distinctions only"
     }}
   ],
   "projects": [
@@ -151,11 +190,10 @@ QUALITY CHECKLIST:
 - Summary is compelling but truthful
 
 OUTPUT: Return only the JSON object, nothing else."""
-
         return prompt
     
     def call_llm_with_resume(self, resume_text: str, update_text: str = "") -> str:
-        """Enhanced LLM call with better error handling and retries."""
+        """Enhanced LLM call with error handling, retries, and post-processing."""
         try:
             prompt = self.create_enhanced_prompt(resume_text, update_text)
             
@@ -182,8 +220,8 @@ OUTPUT: Return only the JSON object, nothing else."""
             is_valid, parsed_json, validation_msg = self.validate_json_response(raw_response)
             
             if is_valid:
-                # Return the cleaned JSON as string
-                return json.dumps(parsed_json, indent=2)
+                cleaned_json = self.clean_resume_json(parsed_json)
+                return json.dumps(cleaned_json, indent=2)
             else:
                 # If validation fails, try a simpler prompt
                 return self._retry_with_simple_prompt(resume_text, update_text, validation_msg)
@@ -198,7 +236,12 @@ OUTPUT: Return only the JSON object, nothing else."""
 Resume text:
 {resume_text[:2000]}  
 
-Return valid JSON with fields: name, email, phone, location, linkedin, github, summary, skills (array), experience (array with company, title, duration, description array), education (array), projects (array), certifications (array).
+Return valid JSON with fields: name, email, phone, location, linkedin, github, summary, skills (array), experience (array with company, title, duration, description array), education (array with gpa and honors), projects (array), certifications (array).
+
+Rules:
+- GPA: X.X/10 or NN.N%
+- Honors: Only real awards/distinctions
+- No empty strings, omit missing fields
 
 JSON only, no markdown:"""
 
@@ -214,7 +257,8 @@ JSON only, no markdown:"""
             is_valid, parsed_json, _ = self.validate_json_response(raw_response)
             
             if is_valid:
-                return json.dumps(parsed_json, indent=2)
+                cleaned_json = self.clean_resume_json(parsed_json)
+                return json.dumps(cleaned_json, indent=2)
             else:
                 raise Exception(f"Both attempts failed. Original error: {error_msg}")
                 
