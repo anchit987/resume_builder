@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Upload, FileText, Download, CheckCircle, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
+import { Upload, FileText, Download, CheckCircle, Loader2, AlertTriangle, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -26,11 +26,11 @@ const TARGET_ROLES = [
 ];
 
 const LOADING_MESSAGES = [
-  "Parsing your resume for key information...",
-  "Optimizing content for ATS systems...",
-  "Matching your profile to the selected role...",
-  "Finalizing the layout and formatting...",
-  "Almost done! Generating your personalized PDF..."
+  "Analyzing your resume content...",
+  "Optimizing for ATS systems...",
+  "Tailoring to your target role...",
+  "Improving formatting and keywords...",
+  "Generating your enhanced PDF..."
 ];
 
 export default function Index() {
@@ -50,18 +50,16 @@ export default function Index() {
     if (isProcessing) {
       const interval = setInterval(() => {
         setCurrentMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-      }, 3000);
+      }, 2500);
       return () => clearInterval(interval);
     }
   }, [isProcessing]);
 
   const validateFile = (file: File): string => {
-    // Check file type
     if (file.type !== "application/pdf") {
       return "Only PDF files are supported.";
     }
     
-    // Check file size (5MB max)
     const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSizeInBytes) {
       return "File size must be less than 5MB.";
@@ -136,9 +134,8 @@ export default function Index() {
       const link = document.createElement("a");
       link.href = url;
       
-      // Generate filename: resume_<original>.pdf
-      const baseName = originalFileName.replace(/\.[^/.]+$/, ""); // Remove extension
-      link.download = `resume_${baseName}.pdf`;
+      const baseName = originalFileName.replace(/\.[^/.]+$/, "");
+      link.download = `resume_${baseName}_optimized.pdf`;
       
       document.body.appendChild(link);
       link.click();
@@ -147,7 +144,7 @@ export default function Index() {
       
       toast({
         title: "Success!",
-        description: "Your ATS-optimized resume has been generated successfully!",
+        description: "Your ATS-optimized resume has been downloaded successfully!",
       });
     } catch (error) {
       console.error("Error downloading PDF:", error);
@@ -162,7 +159,6 @@ export default function Index() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
     if (!file) {
       toast({
         title: "No file selected",
@@ -181,7 +177,6 @@ export default function Index() {
       return;
     }
 
-    // Validate custom instructions length
     if (userInput.length > 500) {
       toast({
         title: "Instructions too long",
@@ -207,27 +202,22 @@ export default function Index() {
       });
 
       if (!response.ok) {
-        // Try to get error message from response
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
           errorMessage = errorData.detail || errorData.error || errorMessage;
         } catch {
-          // If response is not JSON, use status text
           errorMessage = response.statusText || errorMessage;
         }
         throw new Error(errorMessage);
       }
 
-      // Check if response is PDF (for download) or JSON (for display)
       const contentType = response.headers.get("content-type");
       
       if (contentType?.includes("application/pdf")) {
-        // Handle PDF download
         await downloadPDF(response, file.name);
         setProcessedResume({ success: true });
       } else {
-        // Handle JSON response (fallback)
         const result = await response.json();
         setProcessedResume({ success: true, data: result });
         
@@ -272,17 +262,17 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-50 w-full border-b border-border/20 bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-center sm:justify-start">
             <div className="flex items-center space-x-3">
-              <div className="gradient-purple-blue p-2 rounded-lg">
-                <FileText className="h-6 w-6 text-white" />
+              <div className="gradient-purple-blue p-2 rounded-xl">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-brand-blue-500 bg-clip-text text-transparent">
-                ATS Resume Optimizer
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-brand-blue-500 bg-clip-text text-transparent">
+                Resume Optimizer
               </h1>
             </div>
           </div>
@@ -290,34 +280,34 @@ export default function Index() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12 space-y-12">
+      <main className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
         {/* Hero Section */}
-        <section className="text-center space-y-6">
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Transform Your Resume for{" "}
+        <section className="text-center space-y-4 sm:space-y-6 mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+            Beat ATS Systems with{" "}
             <span className="bg-gradient-to-r from-primary to-brand-blue-500 bg-clip-text text-transparent">
-              ATS Success
-            </span>
+              AI-Powered
+            </span>{" "}
+            Optimization
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Upload your PDF resume and get an ATS-optimized version tailored to your target role.
-            Increase your chances of getting past automated screening systems.
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
+            Upload your resume and get an ATS-optimized version that passes automated screening systems.
           </p>
         </section>
 
         {/* Upload Form */}
         <section className="max-w-2xl mx-auto">
-          <Card className="gradient-card border-border/50 p-8">
+          <Card className="border border-border/30 shadow-lg backdrop-blur-sm bg-card/50 p-4 sm:p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* File Upload Area */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-sm font-medium text-foreground block">
                   Upload Resume (PDF) <span className="text-destructive">*</span>
                 </label>
                 <div
-                  className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 ${
+                  className={`relative border-2 border-dashed rounded-xl p-4 sm:p-6 md:p-8 text-center transition-all duration-300 cursor-pointer ${
                     isDragOver
-                      ? "border-primary bg-primary/5 scale-105"
+                      ? "border-primary bg-primary/10 scale-[1.02]"
                       : fileError 
                         ? "border-destructive bg-destructive/5"
                         : "border-border hover:border-primary/50 hover:bg-primary/5"
@@ -336,13 +326,13 @@ export default function Index() {
                     required
                   />
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {file && !fileError ? (
-                      <div className="flex items-center justify-center space-x-3 text-primary">
-                        <CheckCircle className="h-8 w-8" />
-                        <div>
-                          <p className="font-medium">{file.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                      <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-3 text-primary">
+                        <CheckCircle className="h-8 w-8 mb-2 sm:mb-0" />
+                        <div className="text-center sm:text-left">
+                          <p className="font-medium text-sm sm:text-base break-all">{file.name}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {(file.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -350,21 +340,21 @@ export default function Index() {
                     ) : (
                       <>
                         {fileError ? (
-                          <AlertTriangle className="h-12 w-12 mx-auto text-destructive" />
+                          <AlertTriangle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-destructive" />
                         ) : (
-                          <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
+                          <Upload className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground" />
                         )}
                         <div>
-                          <p className="text-lg font-medium">
+                          <p className="text-base sm:text-lg font-medium">
                             {fileError ? "Invalid File" : "Drop your resume here"}
                           </p>
-                          <p className={fileError ? "text-destructive" : "text-muted-foreground"}>
+                          <p className={`text-sm ${fileError ? "text-destructive" : "text-muted-foreground"}`}>
                             {fileError || (
-                              <>or <span className="text-primary underline cursor-pointer">browse files</span></>
+                              <>or <span className="text-primary underline">browse files</span></>
                             )}
                           </p>
                           {!fileError && (
-                            <p className="text-sm text-muted-foreground mt-2">
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                               PDF format only • Max 5MB
                             </p>
                           )}
@@ -377,11 +367,11 @@ export default function Index() {
 
               {/* Target Role Dropdown */}
               <div className="space-y-2">
-                <label htmlFor="targetRole" className="text-sm font-medium text-foreground">
+                <label htmlFor="targetRole" className="text-sm font-medium text-foreground block">
                   Target Role <span className="text-destructive">*</span>
                 </label>
                 <Select value={targetRole} onValueChange={setTargetRole} required>
-                  <SelectTrigger className="bg-background/50 border-border/50 focus:border-primary">
+                  <SelectTrigger className="bg-background/50 border-border/50 focus:border-primary h-12">
                     <SelectValue placeholder="Select your target role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -396,28 +386,28 @@ export default function Index() {
 
               {/* Custom Instructions */}
               <div className="space-y-2">
-                <label htmlFor="userInput" className="text-sm font-medium text-foreground">
-                  Any additional context for the resume?
+                <label htmlFor="userInput" className="text-sm font-medium text-foreground block">
+                  Additional Context (Optional)
                 </label>
                 <Textarea
                   id="userInput"
-                  placeholder="Write anything specific you want AI to include or emphasize..."
+                  placeholder="Any specific skills, achievements, or keywords you want emphasized..."
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
-                  className="min-h-[100px] resize-none bg-background/50 border-border/50 focus:border-primary"
+                  className="min-h-[80px] sm:min-h-[100px] resize-none bg-background/50 border-border/50 focus:border-primary"
                   maxLength={500}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {userInput.length}/500 characters
+                <p className="text-xs text-muted-foreground text-right">
+                  {userInput.length}/500
                 </p>
               </div>
 
               {/* Submit Button */}
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button
                   type="submit"
                   disabled={!file || !targetRole || isProcessing || !!fileError}
-                  className="flex-1 gradient-purple-blue hover:scale-105 transition-all duration-300 text-white border-0"
+                  className="flex-1 gradient-purple-blue hover:scale-[1.02] transition-all duration-300 text-white border-0 h-12 sm:h-11"
                 >
                   {isProcessing ? (
                     <>
@@ -426,8 +416,8 @@ export default function Index() {
                     </>
                   ) : (
                     <>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Generate ATS-Friendly Resume
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Optimize Resume
                     </>
                   )}
                 </Button>
@@ -437,9 +427,10 @@ export default function Index() {
                     type="button"
                     variant="outline"
                     onClick={resetForm}
-                    className="hover:scale-105 transition-all duration-300"
+                    className="hover:scale-[1.02] transition-all duration-300 h-12 sm:h-11"
                     disabled={isProcessing}
                   >
+                    <RotateCcw className="mr-2 h-4 w-4" />
                     Reset
                   </Button>
                 )}
@@ -450,20 +441,23 @@ export default function Index() {
 
         {/* Loading State */}
         {isProcessing && (
-          <section className="max-w-2xl mx-auto">
-            <Card className="gradient-card border-border/50 p-8">
+          <section className="max-w-2xl mx-auto mt-8">
+            <Card className="border border-border/30 shadow-lg backdrop-blur-sm bg-card/50 p-6 sm:p-8">
               <div className="text-center space-y-6">
                 <div className="flex justify-center">
                   <div className="relative">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <div className="absolute inset-0 h-12 w-12 rounded-full border-2 border-primary/20"></div>
+                    <div className="absolute inset-0 h-12 w-12 rounded-full border-2 border-primary/20 animate-pulse"></div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold">Processing Your Resume</h3>
-                  <p className="text-muted-foreground animate-pulse">
+                  <h3 className="text-lg sm:text-xl font-semibold">Processing Your Resume</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground animate-pulse">
                     {LOADING_MESSAGES[currentMessageIndex]}
                   </p>
+                  <div className="w-full bg-muted/30 rounded-full h-2 mt-4">
+                    <div className="bg-primary h-2 rounded-full animate-pulse" style={{width: `${((currentMessageIndex + 1) / LOADING_MESSAGES.length) * 100}%`}}></div>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -472,8 +466,8 @@ export default function Index() {
 
         {/* Results Section */}
         {processedResume && !isProcessing && (
-          <section className="max-w-4xl mx-auto">
-            <Card className="gradient-card border-border/50 p-8">
+          <section className="max-w-2xl mx-auto mt-8">
+            <Card className="border border-border/30 shadow-lg backdrop-blur-sm bg-card/50 p-6 sm:p-8">
               <div className="space-y-6">
                 {processedResume.success ? (
                   <div className="text-center space-y-4">
@@ -481,15 +475,15 @@ export default function Index() {
                       <CheckCircle className="h-16 w-16 text-green-500" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-green-500">Success!</h3>
-                      <p className="text-muted-foreground">
-                        Your ATS-optimized resume has been generated and downloaded successfully!
+                      <h3 className="text-xl sm:text-2xl font-bold text-green-500">Success!</h3>
+                      <p className="text-sm sm:text-base text-muted-foreground mt-2">
+                        Your ATS-optimized resume has been generated and downloaded!
                       </p>
                     </div>
                     <Button
                       onClick={resetForm}
                       variant="outline"
-                      className="hover:scale-105 transition-all duration-300"
+                      className="hover:scale-[1.02] transition-all duration-300"
                     >
                       Process Another Resume
                     </Button>
@@ -500,15 +494,15 @@ export default function Index() {
                       <AlertTriangle className="h-16 w-16 text-destructive" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-destructive">Processing Failed</h3>
-                      <p className="text-muted-foreground mb-4">
+                      <h3 className="text-xl sm:text-2xl font-bold text-destructive">Processing Failed</h3>
+                      <p className="text-sm sm:text-base text-muted-foreground mt-2 px-4">
                         {processedResume.error || "An unexpected error occurred"}
                       </p>
                     </div>
-                    <div className="flex justify-center space-x-4">
+                    <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                       <Button
                         onClick={retrySubmit}
-                        className="gradient-purple-blue hover:scale-105 transition-all duration-300 text-white border-0"
+                        className="gradient-purple-blue hover:scale-[1.02] transition-all duration-300 text-white border-0"
                       >
                         <RotateCcw className="mr-2 h-4 w-4" />
                         Try Again
@@ -516,7 +510,7 @@ export default function Index() {
                       <Button
                         onClick={resetForm}
                         variant="outline"
-                        className="hover:scale-105 transition-all duration-300"
+                        className="hover:scale-[1.02] transition-all duration-300"
                       >
                         Start Over
                       </Button>
@@ -530,20 +524,20 @@ export default function Index() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 mt-24">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <p className="text-muted-foreground text-sm">
-              © 2024 ATS Resume Optimizer. All rights reserved.
+      <footer className="border-t border-border/20 mt-16 sm:mt-24">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              © 2024 Resume Optimizer. All rights reserved.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+            <div className="flex space-x-4 sm:space-x-6">
+              <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                 Privacy
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                 Terms
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                 Support
               </a>
             </div>

@@ -5,23 +5,22 @@ import path from "path";
 export default defineConfig({
   server: {
     host: "127.0.0.1", // Force IPv4
-    port: 8080,
+    port: 3000,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:7777", // FastAPI backend
+        target: "http://127.0.0.1:8000", // FastAPI backend
         changeOrigin: true,
         secure: false,
       },
     },
   },
   build: {
-    outDir: "dist/spa",
+    outDir: "dist",
   },
   plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./client"),
-      "@shared": path.resolve(__dirname, "./shared"),
     },
   },
 });
