@@ -52,7 +52,7 @@ export const handleUpload: RequestHandler = async (req, res) => {
         formData.append('user_input', user_input || '');
 
         // Forward to FastAPI backend
-        const backendUrl = process.env.BACKEND_URL || 'http://localhost:7777';
+        const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:7777';
         const response = await fetch(`${backendUrl}/upload`, {
           method: 'POST',
           body: formData,
