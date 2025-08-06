@@ -40,8 +40,8 @@ app = FastAPI(
 
 # CORS setup
 origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
     "https://your-production-frontend.com",
 ]
 
@@ -104,7 +104,7 @@ async def system_check():
         "checks": checks
     }
 
-@app.post("/upload")
+@app.post("/api/upload")
 async def upload_resume(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -333,4 +333,4 @@ async def preview_resume_data(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7779) 
+    uvicorn.run(app, host="0.0.0.0", port=7777) 
