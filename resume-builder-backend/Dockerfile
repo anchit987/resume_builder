@@ -12,8 +12,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
-COPY . .
+# Copy backend code including templates
+COPY ./app /app/app
 
 # Environment variable for template path
 ENV TEMPLATE_PATH=/app/app/templates
