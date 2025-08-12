@@ -12,7 +12,10 @@ class EnhancedPDFGenerator:
     """Enhanced PDF generator with robust LaTeX escaping and data cleaning."""
     
     def __init__(self, template_path: str = None):
-        self.template_path = template_path or r"C://Users//HP//Desktop//resumebuilder//resume_builder//resume-builder-backend//app//templates"
+        self.template_path = (
+            template_path
+            or os.getenv("TEMPLATE_PATH", os.path.join(os.getcwd(), "app", "templates"))
+        )
         
         self.latex_escape = {
             '&': r'\&',
