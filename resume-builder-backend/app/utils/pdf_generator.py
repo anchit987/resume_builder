@@ -12,10 +12,18 @@ class EnhancedPDFGenerator:
     """Enhanced PDF generator with robust LaTeX escaping and data cleaning."""
     
     def __init__(self, template_path: str = None):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        default_template_path = os.path.join(base_dir, "templates")
+
         self.template_path = (
             template_path
-            or os.getenv("TEMPLATE_PATH", os.path.join(os.getcwd(), "app", "templates"))
+            or os.getenv("TEMPLATE_PATH", default_template_path)
         )
+
+        if not os.path.isdir(self.template_path):
+            raise FileNotFoundError(
+                f"Template directory not found: {self.template_path}"
+            )
         
         self.latex_escape = {
             '&': r'\&',
