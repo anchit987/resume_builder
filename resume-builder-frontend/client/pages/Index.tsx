@@ -196,7 +196,7 @@ export default function Index() {
       formData.append("target_role", targetRole);
       formData.append("user_input", userInput);
 
-      const response = await fetch("${import.meta.env.VITE_API_URL}/api/upload", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload`, {
         method: "POST",
         body: formData,
       });
