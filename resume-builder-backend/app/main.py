@@ -65,10 +65,9 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "version": "2.0.0"}
+@app.head("/health")
+async def health_check_head():
+    return
 
 @app.get("/system-check")
 async def system_check():
