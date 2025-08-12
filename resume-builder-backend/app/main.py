@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from app import models, database, schemas
 from app.utils import cleanup
-from app.config import TEMP_DIR
+from app.config import TEMP_DIR, UI_URL
 
 # Import enhanced utilities
 from app.utils import file_parser  # Use your original parser
@@ -40,9 +40,7 @@ app = FastAPI(
 
 # CORS setup
 origins = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "https://your-production-frontend.com",
+    UI_URL
 ]
 
 app.add_middleware(
