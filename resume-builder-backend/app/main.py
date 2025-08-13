@@ -13,10 +13,7 @@ from fastapi import (
     BackgroundTasks,
     HTTPException
 )
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from app import models, database, schemas
 from app.utils import cleanup
 from app.config import TEMP_DIR, UI_URL
 
@@ -55,16 +52,6 @@ app.add_middleware(
 llm_handler = EnhancedLLMHandler()
 pdf_generator = EnhancedPDFGenerator()
 
-# Create database tables
-models.Base.metadata.create_all(bind=database.engine)
-
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 @app.head("/health")
 async def health_check_head():
     return
@@ -85,15 +72,6 @@ async def system_check():
     except Exception as e:
         checks["temp_dir"] = {"status": "error", "message": str(e)}
     
-    # Check database connection
-    try:
-        db = next(get_db())
-        db.execute("SELECT 1")
-        checks["database"] = {"status": "ok"}
-        db.close()
-    except Exception as e:
-        checks["database"] = {"status": "error", "message": str(e)}
-    
     overall_status = "ok" if all(check["status"] == "ok" for check in checks.values()) else "error"
     
     return {
@@ -107,8 +85,7 @@ async def upload_resume(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user_input: str = Form(None),
-    target_role: str = Form(...),
-    db: Session = Depends(get_db)
+    target_role: str = Form(...)
 ):
     """Enhanced resume upload and processing endpoint."""
     
@@ -185,21 +162,6 @@ async def upload_resume(
                 {"error": f"AI processing failed: {str(e)}"}, 
                 status_code=500
             )
-        
-        # Store in database (optional - you mentioned no storage needed)
-        try:
-            ip = request.client.host
-            resume = models.Resume(
-                original_filename=file.filename,
-                parsed_text=text[:5000],  # Truncate for storage
-                llm_response=llm_response[:10000],  # Truncate for storage
-                ip_address=ip
-            )
-            db.add(resume)
-            db.commit()
-            logger.info(f"[UPLOAD] Resume logged in DB with ID: {resume.id}")
-        except Exception as e:
-            logger.warning(f"[UPLOAD] Database logging failed (continuing): {str(e)}")
         
         # Clean up temp file
         cleanup.cleanup_file(temp_path)
@@ -329,4 +291,4 @@ async def preview_resume_data(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7777) 
+    uvicorn.run(app, host="0.0.0.0", port=7777)
