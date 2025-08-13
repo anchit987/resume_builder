@@ -2,15 +2,20 @@ import os
 import re
 import subprocess
 import logging
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 from typing import Dict, Tuple, Optional
 from datetime import datetime
+from functools import lru_cache
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class EnhancedPDFGenerator:
     """Enhanced PDF generator with robust LaTeX escaping and data cleaning."""
+    
+    # Pre-compile regex patterns
+    URL_PATTERN = re.compile(r'^(http://|https://|www\.|mailto:)', re.IGNORECASE)
+    LATEX_ESCAPE_PATTERN = None  # Will be set in __init__
     
     def __init__(self, template_path: str = None):
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -39,32 +44,64 @@ class EnhancedPDFGenerator:
             '\\': r'\textbackslash{}'
         }
         
-        self.no_escape_keys = {"website", "linkedin", "github", "portfolio", "link"}
-    
-    # ---------------------------
-    # LaTeX Escaping & URL Detection
-    # ---------------------------
+        # Pre-compile the regex pattern
+        self.__class__.LATEX_ESCAPE_PATTERN = re.compile('|'.join(re.escape(c) for c in self.latex_escape))
+        
+        self.no_escape_keys = frozenset({"website", "linkedin", "github", "portfolio", "link"})
+        
+        # Initialize Jinja environment once
+        self.env = Environment(
+            loader=FileSystemLoader(self.template_path),
+            block_start_string='((*', 
+            block_end_string='*))',
+            variable_start_string='(((', 
+            variable_end_string=')))',
+            comment_start_string='((#', 
+            comment_end_string='#))',
+            trim_blocks=True, 
+            lstrip_blocks=True, 
+            autoescape=False
+        )
+        self.env.filters['batch'] = self._batch_filter
+        
+        # Cache the template
+        self._template = self.env.get_template("resume_template.tex.j2")
+
+    @lru_cache(maxsize=1024)
     def escape_latex(self, text: str) -> str:
-        """Escape LaTeX special characters exactly once."""
+        """Escape LaTeX special characters with caching."""
         if not text or not isinstance(text, str):
             return text
 
-        # Normalize fancy characters
-        text = (
-            text.replace("–", "--")  # En dash
-                .replace("—", "---")  # Em dash
-                .replace("’", "'")
-                .replace("‘", "'")
-                .replace("“", '"')
-                .replace("”", '"')
-        )
+        # First replace special characters using string replacement
+        replacements = {
+            "–": "-",     # En dash
+            "—": "---",   # Em dash
+            "'": "'",     # Smart single quote (left)
+            "'": "'",     # Smart single quote (right)
+            """: "\"",    # Smart double quote (left)
+            """: "\""     # Smart double quote (right)
+        }
+        
+        # Replace special characters one by one
+        for old, new in replacements.items():
+            text = text.replace(old, new)
 
-        # Regex escape
-        pattern = re.compile('|'.join(re.escape(c) for c in self.latex_escape))
-        return pattern.sub(lambda m: self.latex_escape[m.group()], text)
+        # Then escape LaTeX special characters
+        return self.LATEX_ESCAPE_PATTERN.sub(lambda m: self.latex_escape[m.group()], text)
 
     def _is_url(self, text: str) -> bool:
-        return isinstance(text, str) and text.lower().startswith(('http://', 'https://', 'www.', 'mailto:'))
+        return isinstance(text, str) and bool(self.URL_PATTERN.match(text))
+
+    @staticmethod
+    def _clean_str(val: str) -> Optional[str]:
+        return val.strip() if isinstance(val, str) and val.strip() else None
+
+    @staticmethod
+    def _clean_list(lst):
+        if not isinstance(lst, list):
+            return []
+        return [x.strip() for x in lst if isinstance(x, str) and x.strip()]
 
     # ---------------------------
     # Resume Data Cleaning
@@ -72,26 +109,18 @@ class EnhancedPDFGenerator:
     def validate_resume_data(self, resume_data: Dict) -> Dict:
         """Validate, normalize, and deeply clean resume data to avoid empty LaTeX sections."""
         
-        def _clean_str(val: str) -> Optional[str]:
-            return val.strip() if isinstance(val, str) and val.strip() else None
-
-        def _clean_list(lst):
-            if not isinstance(lst, list):
-                return []
-            cleaned = [_clean_str(x) for x in lst if isinstance(x, str)]
-            return [x for x in cleaned if x]  # remove None
 
         cleaned_data = {
-            'name': _clean_str(resume_data.get('name')) or 'Name Not Provided',
-            'email': _clean_str(resume_data.get('email')) or '',
-            'phone': _clean_str(resume_data.get('phone')) or '',
-            'location': _clean_str(resume_data.get('location')) or '',
-            'linkedin': _clean_str(resume_data.get('linkedin')) or '',
-            'github': _clean_str(resume_data.get('github')) or '',
-            'portfolio': _clean_str(resume_data.get('portfolio')) or '',
-            'summary': _clean_str(resume_data.get('summary')) or '',
-            'skills': _clean_list(resume_data.get('skills', [])),
-            'certifications': _clean_list(resume_data.get('certifications', [])),
+            'name': self._clean_str(resume_data.get('name')) or 'Name Not Provided',
+            'email': self._clean_str(resume_data.get('email')) or '',
+            'phone': self._clean_str(resume_data.get('phone')) or '',
+            'location': self._clean_str(resume_data.get('location')) or '',
+            'linkedin': self._clean_str(resume_data.get('linkedin')) or '',
+            'github': self._clean_str(resume_data.get('github')) or '',
+            'portfolio': self._clean_str(resume_data.get('portfolio')) or '',
+            'summary': self._clean_str(resume_data.get('summary')) or '',
+            'skills': self._clean_list(resume_data.get('skills', [])),
+            'certifications': self._clean_list(resume_data.get('certifications', [])),
         }
 
         # --- Experience ---
@@ -102,13 +131,13 @@ class EnhancedPDFGenerator:
                 if isinstance(desc, str):
                     desc = [desc]
                 if isinstance(desc, list):
-                    desc = _clean_list(desc)
+                    desc = self._clean_list(desc)
                 
                 cleaned_exp = {
-                    'company': _clean_str(exp.get('company')) or '',
-                    'title': _clean_str(exp.get('title')) or '',
-                    'duration': _clean_str(exp.get('duration')) or '',
-                    'location': _clean_str(exp.get('location')) or '',
+                    'company': self._clean_str(exp.get('company')) or '',
+                    'title': self._clean_str(exp.get('title')) or '',
+                    'duration': self._clean_str(exp.get('duration')) or '',
+                    'location': self._clean_str(exp.get('location')) or '',
                     'description': desc,
                 }
                 if cleaned_exp['company'] or cleaned_exp['title']:
@@ -120,12 +149,12 @@ class EnhancedPDFGenerator:
         for edu in resume_data.get('education', []):
             if isinstance(edu, dict):
                 cleaned_edu = {
-                    'institution': _clean_str(edu.get('institution')) or '',
-                    'degree': _clean_str(edu.get('degree')) or '',
-                    'duration': _clean_str(edu.get('duration')) or '',
-                    'location': _clean_str(edu.get('location')) or '',
-                    'gpa': _clean_str(edu.get('gpa')) or '',
-                    'honors': _clean_str(edu.get('honors')) or '',
+                    'institution': self._clean_str(edu.get('institution')) or '',
+                    'degree': self._clean_str(edu.get('degree')) or '',
+                    'duration': self._clean_str(edu.get('duration')) or '',
+                    'location': self._clean_str(edu.get('location')) or '',
+                    'gpa': self._clean_str(edu.get('gpa')) or '',
+                    'honors': self._clean_str(edu.get('honors')) or '',
                 }
                 if cleaned_edu['institution'] or cleaned_edu['degree']:
                     cleaned_education.append(cleaned_edu)
@@ -139,13 +168,13 @@ class EnhancedPDFGenerator:
                 if isinstance(desc, str):
                     desc = [desc]
                 if isinstance(desc, list):
-                    desc = _clean_list(desc)
+                    desc = self._clean_list(desc)
                 
                 cleaned_proj = {
-                    'title': _clean_str(proj.get('title')) or '',
+                    'title': self._clean_str(proj.get('title')) or '',
                     'description': desc,
-                    'tech_stack': _clean_str(proj.get('tech_stack')) or '',
-                    'link': _clean_str(proj.get('link')) or '',
+                    'tech_stack': self._clean_str(proj.get('tech_stack')) or '',
+                    'link': self._clean_str(proj.get('link')) or '',
                 }
                 if cleaned_proj['title'] or cleaned_proj['description']:
                     cleaned_projects.append(cleaned_proj)
@@ -181,16 +210,7 @@ class EnhancedPDFGenerator:
     def generate_latex_from_resume(self, resume_data: Dict) -> str:
         logging.info("Preprocessing resume data...")
         resume_data = self.preprocess_resume_data(self.validate_resume_data(resume_data))
-        env = Environment(
-            loader=FileSystemLoader(self.template_path),
-            block_start_string='((*', block_end_string='*))',
-            variable_start_string='(((', variable_end_string=')))',
-            comment_start_string='((#', comment_end_string='#))',
-            trim_blocks=True, lstrip_blocks=True, autoescape=False
-        )
-        env.filters['batch'] = self._batch_filter
-        template = env.get_template("resume_template.tex.j2")
-        return template.render(**resume_data)
+        return self._template.render(**resume_data)
 
     def _batch_filter(self, items, size):
         return [items[i:i + size] for i in range(0, len(items), size)] if items else []
@@ -209,69 +229,49 @@ class EnhancedPDFGenerator:
 
     def render_resume_to_pdf(self, resume_data: Dict, output_dir: str, return_log=False):
         try:
-            # Check LaTeX installation first
-            latex_ok, msg = self.check_latex_installation()
-            if not latex_ok:
-                error_msg = f"LaTeX installation check failed: {msg}"
-                logging.error(error_msg)
-                return (None, error_msg) if return_log else None
-
-            # Create output directory and prepare files
+            # Ensure output directory exists
             os.makedirs(output_dir, exist_ok=True)
+            
+            # Use more efficient file naming
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             base_name = f"resume_{timestamp}"
             tex_file = os.path.join(output_dir, f"{base_name}.tex")
             pdf_file = os.path.join(output_dir, f"{base_name}.pdf")
 
-            # Generate and write LaTeX content
+            # Generate LaTeX content
             tex_content = self.generate_latex_from_resume(resume_data)
-            logging.info(f"Writing LaTeX content to {tex_file}")
+            
+            # Use context manager for file operations
             with open(tex_file, "w", encoding="utf-8") as f:
                 f.write(tex_content)
 
-            # First try pdflatex (more commonly installed)
-            try:
-                logging.info("Attempting PDF generation with pdflatex...")
-                result = subprocess.run(
-                    ["pdflatex", "-interaction=nonstopmode", "-file-line-error", tex_file],
-                    cwd=output_dir,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    timeout=30
-                )
-                log_content = f"=== PDFLATEX OUTPUT ===\n{result.stdout}\n{result.stderr}"
-                logging.info(f"pdflatex exit code: {result.returncode}")
-                
-                # Write complete log for debugging
-                log_file = os.path.join(output_dir, f"{base_name}.log")
-                with open(log_file, "w", encoding="utf-8") as f:
-                    f.write(log_content)
+            # Run pdflatex with optimized parameters
+            process = subprocess.run(
+                ["pdflatex", "-interaction=nonstopmode", "-file-line-error", 
+                 "-halt-on-error", "-output-directory", output_dir, tex_file],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
 
-                # Check if PDF was generated
-                if not os.path.exists(pdf_file) or os.path.getsize(pdf_file) == 0:
-                    error_msg = f"PDF generation failed - Check log at {log_file}"
-                    logging.error(error_msg)
-                    return (None, log_content) if return_log else None
+            log_content = f"=== PDFLATEX OUTPUT ===\n{process.stdout}\n{process.stderr}"
 
-                # Clean up auxiliary files
-                for ext in ['.aux', '.log', '.out']:
-                    try:
-                        aux_file = os.path.join(output_dir, f"{base_name}{ext}")
-                        if os.path.exists(aux_file):
-                            os.unlink(aux_file)
-                    except Exception as e:
-                        logging.warning(f"Failed to clean up {ext} file: {e}")
+            if not os.path.exists(pdf_file) or os.path.getsize(pdf_file) == 0:
+                return (None, log_content) if return_log else None
 
-                return (pdf_file, log_content) if return_log else pdf_file
+            # Clean up in a single loop
+            for ext in ['.aux', '.log', '.out', '.tex']:
+                try:
+                    aux_file = os.path.join(output_dir, f"{base_name}{ext}")
+                    if os.path.exists(aux_file):
+                        os.unlink(aux_file)
+                except OSError:
+                    pass
 
-            except Exception as e:
-                error_msg = f"PDF generation failed: {str(e)}\nCheck if LaTeX is installed and in PATH"
-                logging.error(error_msg)
-                return (None, error_msg) if return_log else None
+            return (pdf_file, log_content) if return_log else pdf_file
 
         except Exception as e:
-            error_msg = f"Unexpected error in PDF generation: {str(e)}"
+            error_msg = f"PDF generation failed: {str(e)}"
             logging.error(error_msg)
             return (None, error_msg) if return_log else None
 
