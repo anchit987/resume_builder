@@ -208,7 +208,6 @@ async def upload_resume(
         try:
             parsed_json = json.loads(llm_response)
             logger.info(f"[UPLOAD] Successfully parsed JSON with keys: {list(parsed_json.keys())}")
-            logger.info(f"[UPLOAD] Full JSON response: {parsed_json}")
         except json.JSONDecodeError as e:
             logger.error(f"[UPLOAD] JSON parsing failed: {str(e)}")
             return JSONResponse(
