@@ -8,11 +8,10 @@ set PATH=%PATH%;C:\Users\asus\AppData\Local\Programs\MiKTeX\miktex\bin\x64
 uvicorn app.main:app --reload --port 7777
 
 Steps for local:
-1. add local ui url in origins under #cors setup
+1.  Add local UI URL IN .env file
 2. in pdf_genertor remove template path code and add you local template path 
 - example self.template_path = template_path or r"C://Users//HP//Desktop//resumebuilder//resume_builder//resume-builder-backend//app//templates"
-3. Add local UI URL IN .env file
-4. Add local API URL In vite.config.ts
+3. Add local API URL In .env file of UI
 
 
 Imp Notes:

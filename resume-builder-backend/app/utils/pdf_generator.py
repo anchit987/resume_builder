@@ -4,6 +4,7 @@ import subprocess
 import logging
 from jinja2 import Environment, FileSystemLoader
 from typing import Dict, Tuple, Optional
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -207,43 +208,72 @@ class EnhancedPDFGenerator:
             return False, "pdflatex check timed out"
 
     def render_resume_to_pdf(self, resume_data: Dict, output_dir: str, return_log=False):
-        latex_ok, msg = self.check_latex_installation()
-        if not latex_ok:
-            return (None, msg) if return_log else None
+        try:
+            # Check LaTeX installation first
+            latex_ok, msg = self.check_latex_installation()
+            if not latex_ok:
+                error_msg = f"LaTeX installation check failed: {msg}"
+                logging.error(error_msg)
+                return (None, error_msg) if return_log else None
 
-        os.makedirs(output_dir, exist_ok=True)
-        tex_file = os.path.join(output_dir, "resume.tex")
-        pdf_file = os.path.join(output_dir, "resume.pdf")
-        log_file = os.path.join(output_dir, "pdflatex.log")
+            # Create output directory and prepare files
+            os.makedirs(output_dir, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base_name = f"resume_{timestamp}"
+            tex_file = os.path.join(output_dir, f"{base_name}.tex")
+            pdf_file = os.path.join(output_dir, f"{base_name}.pdf")
 
-        tex_content = self.generate_latex_from_resume(resume_data)
-        with open(tex_file, "w", encoding="utf-8") as f:
-            f.write(tex_content)
+            # Generate and write LaTeX content
+            tex_content = self.generate_latex_from_resume(resume_data)
+            logging.info(f"Writing LaTeX content to {tex_file}")
+            with open(tex_file, "w", encoding="utf-8") as f:
+                f.write(tex_content)
 
-        def run_pdflatex():
-            return subprocess.run(
-                ["pdflatex", "-interaction=nonstopmode", "-file-line-error", "resume.tex"],
-                cwd=output_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60
-            )
+            # First try pdflatex (more commonly installed)
+            try:
+                logging.info("Attempting PDF generation with pdflatex...")
+                result = subprocess.run(
+                    ["pdflatex", "-interaction=nonstopmode", "-file-line-error", tex_file],
+                    cwd=output_dir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=30
+                )
+                log_content = f"=== PDFLATEX OUTPUT ===\n{result.stdout}\n{result.stderr}"
+                logging.info(f"pdflatex exit code: {result.returncode}")
+                
+                # Write complete log for debugging
+                log_file = os.path.join(output_dir, f"{base_name}.log")
+                with open(log_file, "w", encoding="utf-8") as f:
+                    f.write(log_content)
 
-        result1 = run_pdflatex()
-        result2 = run_pdflatex()
-        combined_output = f"=== PASS1 ===\n{result1.stdout}\n{result1.stderr}\n\n=== PASS2 ===\n{result2.stdout}\n{result2.stderr}"
+                # Check if PDF was generated
+                if not os.path.exists(pdf_file) or os.path.getsize(pdf_file) == 0:
+                    error_msg = f"PDF generation failed - Check log at {log_file}"
+                    logging.error(error_msg)
+                    return (None, log_content) if return_log else None
 
-        with open(log_file, "w", encoding="utf-8") as f:
-            f.write(combined_output)
-
-        if os.path.exists(pdf_file) and os.path.getsize(pdf_file) > 0:
-            for ext in ['.aux', '.log', '.out', '.fdb_latexmk', '.fls', '.synctex.gz']:
-                aux = os.path.join(output_dir, f"resume{ext}")
-                if os.path.exists(aux):
+                # Clean up auxiliary files
+                for ext in ['.aux', '.log', '.out']:
                     try:
-                        os.remove(aux)
-                    except:
-                        pass
-            return (pdf_file, combined_output) if return_log else pdf_file
-        else:
-            return (None, combined_output) if return_log else None
+                        aux_file = os.path.join(output_dir, f"{base_name}{ext}")
+                        if os.path.exists(aux_file):
+                            os.unlink(aux_file)
+                    except Exception as e:
+                        logging.warning(f"Failed to clean up {ext} file: {e}")
+
+                return (pdf_file, log_content) if return_log else pdf_file
+
+            except Exception as e:
+                error_msg = f"PDF generation failed: {str(e)}\nCheck if LaTeX is installed and in PATH"
+                logging.error(error_msg)
+                return (None, error_msg) if return_log else None
+
+        except Exception as e:
+            error_msg = f"Unexpected error in PDF generation: {str(e)}"
+            logging.error(error_msg)
+            return (None, error_msg) if return_log else None
 
 # Factory function
 def render_resume_to_pdf(resume_data: Dict, output_dir: str, return_log: bool = False):
