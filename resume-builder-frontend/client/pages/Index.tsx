@@ -528,17 +528,24 @@ export default function Index() {
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="flex flex-col items-center text-center space-y-4">
             <p className="text-xs sm:text-sm text-muted-foreground">
-              © 2024 Resume Optimizer. All rights reserved.
+              © 2025 Resume Optimizer. All rights reserved. We do not store any of your data. Use this tool to enhance your resume for ATS systems.
             </p>
-            <div className="flex space-x-4 sm:space-x-6">
-              <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
-                Privacy
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6 items-center">
+              <a 
+                href="https://www.linkedin.com/in/anchit-gangrade-bb29571b2/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors flex items-center"
+              >
+                Contact: Anchit Gangrade
               </a>
-              <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
-                Terms
-              </a>
-              <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
-                Support
+              <a 
+                href="https://www.linkedin.com/in/yash-saraswat-547bb722a/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors flex items-center"
+              >
+                Contact: Yash Saraswat
               </a>
             </div>
           </div>
