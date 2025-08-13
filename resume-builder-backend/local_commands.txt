@@ -7,6 +7,13 @@ set PATH=%PATH%;C:\Users\asus\AppData\Local\Programs\MiKTeX\miktex\bin\x64
 
 uvicorn app.main:app --reload --port 7777
 
+Steps for local:
+1. add local ui url in origins under #cors setup
+2. in pdf_genertor remove template path code and add you local template path 
+- example self.template_path = template_path or r"C://Users//HP//Desktop//resumebuilder//resume_builder//resume-builder-backend//app//templates"
+3. Add local UI URL IN .env file
+4. Add local API URL In vite.config.ts
+
 
 Imp Notes:
 During miktex installation, check the box to install missing packages on-the-fly.
